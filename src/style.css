@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
   --bg-dark: #0F172A;
@@ -28,14 +28,14 @@ body {
   overflow: hidden;
 }
 
-/* Fullscreen Viewport - 100% FULLY VISIBLE CAMERA FEED */
+/* Fullscreen Viewport Layering */
 .fullscreen-viewport {
   position: fixed;
   inset: 0;
   z-index: 1;
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: #04060A;
 }
 
 .fullscreen-viewport video {
@@ -45,16 +45,19 @@ body {
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
-  opacity: 1.0; /* Full 100% video clarity */
-  filter: none;
+  opacity: 0.85; /* Camera background opacity */
+  z-index: 1;
+  pointer-events: none;
 }
 
-.fullscreen-viewport canvas {
+/* Main Canvas Layer - Guaranteed Top Stacking */
+#mainCanvas {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10 !important;
+  pointer-events: auto;
   cursor: crosshair;
 }
 
@@ -62,7 +65,7 @@ body {
   display: none;
 }
 
-/* Dropdown Menu & Control Items */
+/* Timbre Selectors & Options */
 .timbre-list {
   display: flex;
   flex-direction: column;
@@ -73,9 +76,9 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-neutral);
   color: var(--text-main);
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
@@ -94,12 +97,12 @@ body {
 
 .octave-bar {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .octave-bar button {
   flex: 1;
-  padding: 0.4rem;
+  padding: 0.45rem;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-neutral);
@@ -205,11 +208,11 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 
-/* Opening Screen Splash Modal */
+/* Splash Modal */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 100000;
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(20px);
   display: flex;
@@ -222,12 +225,13 @@ input[type="range"]::-webkit-slider-thumb {
 .modal-backdrop.hidden {
   opacity: 0;
   pointer-events: none;
+  display: none !important;
 }
 
 .modal-box {
   width: 440px;
   max-width: 90vw;
-  background: rgba(30, 41, 59, 0.92);
+  background: rgba(30, 41, 59, 0.94);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 24px;
