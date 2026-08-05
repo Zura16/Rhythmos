@@ -8,6 +8,9 @@
   
   <link rel="stylesheet" href="./src/style.css">
   
+  <!-- GSAP CDN for React Bits PillNav animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous"></script>
+
   <!-- MediaPipe Hands & Camera Utils CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -23,21 +26,13 @@
   <!-- Songbook & Teleprompter Drawer (Left Side) -->
   <aside class="songbook-drawer collapsed" id="songbookDrawer"></aside>
 
-  <!-- Top Header Navigation Bar with React Bits GooeyNav Integration -->
+  <!-- Top Header Navigation Bar with React Bits PillNav Integration -->
   <header class="fixed top-0 bg-background/50 backdrop-blur-md left-0 w-full z-50">
     <div class="px-4">
       <div class="flex items-center justify-between h-20">
         
-        <!-- Left Brand Pill -->
-        <div class="flex border border-white/20 bg-slate-900/90 rounded-md h-14 px-4 items-center">
-          <a href="#" aria-label="home" class="flex gap-2 whitespace-nowrap items-center text-white">
-            <div class="logo-box">🎵</div>
-            <span class="font-semibold pr-2 text-xl text-white">Rhythmos</span>
-          </a>
-        </div>
-
-        <!-- Center GooeyNav Liquid Blob Navigation Container -->
-        <nav id="gooeyNavContainer" class="gooey-nav-container"></nav>
+        <!-- Center React Bits PillNav Navigation Container -->
+        <nav id="pillNavContainer" class="pill-nav-main-wrapper"></nav>
 
         <!-- Right Header CTA Buttons -->
         <div class="hidden gap-2 lg:flex items-center">

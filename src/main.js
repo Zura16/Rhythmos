@@ -3,7 +3,7 @@ import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
 import { Ferrofluid } from './ferrofluid.js';
 import { SongBookManager } from './songBook.js';
-import { GooeyNav } from './gooeyNav.js';
+import { PillNav } from './pillNav.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
@@ -28,8 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const volVal = document.getElementById('volVal');
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
-  const octaveLabel = document.getElementById('octaveLabel');
-  const currentInstLabel = document.getElementById('currentInstLabel');
 
   const instNameMap = {
     harmonium: '🪗 Harmonium',
@@ -41,22 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
     organ: '⛪ Church Organ'
   };
 
-  // Initialize GooeyNav Component
-  const gooeyNavContainer = document.getElementById('gooeyNavContainer');
-  let gooeyNav = null;
+  // Initialize React Bits PillNav Component with GSAP Hover Circle Animations
+  const pillNavContainer = document.getElementById('pillNavContainer');
+  let pillNav = null;
 
-  if (gooeyNavContainer) {
-    gooeyNav = new GooeyNav(gooeyNavContainer, {
-      particleCount: 15,
-      particleDistances: [90, 10],
-      particleR: 100,
-      initialActiveIndex: 0,
-      animationTime: 600,
-      timeVariance: 300,
-      colors: [1, 2, 3, 1, 2, 3, 1, 4],
+  if (pillNavContainer) {
+    pillNav = new PillNav(pillNavContainer, {
+      logo: '🎵',
+      ease: 'power2.easeOut',
+      baseColor: '#0F172A',
+      pillColor: 'rgba(255, 255, 255, 0.12)',
+      hoveredPillTextColor: '#FFFFFF',
+      pillTextColor: '#F8FAFC',
       items: [
         {
-          id: 'tabInst',
+          id: 'pillInst',
           label: '🪗 Harmonium',
           hasDropdown: true,
           dropdownContent: `
@@ -108,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `
         },
         {
-          id: 'tabVision',
+          id: 'pillVision',
           label: '📹 Vision',
           hasDropdown: true,
           dropdownContent: `
@@ -125,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `
         },
         {
-          id: 'tabOctave',
+          id: 'pillOctave',
           label: '🎼 Octave (<span id="octaveLabel">4</span>)',
           hasDropdown: true,
           dropdownContent: `
@@ -142,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `
         },
         {
-          id: 'tabAudio',
+          id: 'pillAudio',
           label: '🎚️ Audio Mix',
           hasDropdown: true,
           dropdownContent: `
@@ -353,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEngine.triggerNoteInstant('A', 4, 0.6);
   });
 
-  // Acoustic Instrument Selectors (Updates Dynamic Top Label on GooeyNav!)
+  // Acoustic Instrument Selectors (Updates Dynamic Top Label on PillNav!)
   document.addEventListener('click', (e) => {
     const instBtn = e.target.closest('.inst-btn');
     if (instBtn) {
@@ -363,9 +360,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       audioEngine.setInstrument(instKey);
 
-      // Dynamically display selected instrument at top GooeyNav tab!
-      if (gooeyNav && instNameMap[instKey]) {
-        gooeyNav.updateTabLabel('tabInst', instNameMap[instKey]);
+      // Dynamically display selected instrument at top PillNav tab!
+      if (pillNav && instNameMap[instKey]) {
+        pillNav.updatePillLabel('pillInst', instNameMap[instKey]);
       }
     }
 
