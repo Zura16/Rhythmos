@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const webcamVideo = document.getElementById('webcamVideo');
 
   const btnStartApp = document.getElementById('btnStartApp');
+  const btnLearnMore = document.getElementById('btnLearnMore');
   const startModal = document.getElementById('startModal');
   const ferrofluidContainer = document.getElementById('ferrofluidContainer');
   
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const revVal = document.getElementById('revVal');
   const octaveLabel = document.getElementById('octaveLabel');
 
-  // Initialize Ferrofluid background on welcome modal
+  // Initialize Ferrofluid background on hero splash screen
   let ferrofluid = null;
   if (ferrofluidContainer) {
     try {
@@ -166,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  btnStartApp.addEventListener('click', initApp);
+  if (btnStartApp) btnStartApp.addEventListener('click', initApp);
+  if (btnLearnMore) btnLearnMore.addEventListener('click', initApp);
 
   btnToggleCamera.addEventListener('click', async () => {
     audioEngine.init();

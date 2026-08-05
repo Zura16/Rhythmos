@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap');
 
 :root {
   --bg-dark: #0F172A;
@@ -8,7 +8,7 @@
   --text-main: #F8FAFC;
   --text-dark: #0F172A;
   --text-muted: #94A3B8;
-  --font-heading: 'Outfit', -apple-system, sans-serif;
+  --font-heading: 'Inter', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
 }
 
@@ -45,7 +45,7 @@ body {
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
-  opacity: 1.0; /* FULL 100% VISIBILITY - NO DIMMING */
+  opacity: 1.0;
   filter: none;
 }
 
@@ -316,7 +316,7 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 0.4rem;
 }
 
-/* Ferrofluid Modal Backdrop & Floating Metallic Card */
+/* Modal Hero Backdrop */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -335,7 +335,7 @@ input[type="range"]::-webkit-slider-thumb {
   pointer-events: none;
 }
 
-/* Ferrofluid WebGL Background Container */
+/* Ferrofluid WebGL Background */
 .ferrofluid-modal-bg {
   position: absolute;
   inset: 0;
@@ -344,69 +344,113 @@ input[type="range"]::-webkit-slider-thumb {
   z-index: 1;
 }
 
-/* Ferrofluid Liquid Metallic Glass Box */
-.ferrofluid-modal-box {
+/* Hero Content Matching Attached Image Exactly */
+.hero-content {
   position: relative;
-  z-index: 2;
-  width: 440px;
-  max-width: 90vw;
-  background: rgba(8, 12, 20, 0.78);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 24px;
-  padding: 2.25rem;
-  text-align: center;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  z-index: 10;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 760px;
+  padding: 2.5rem;
   gap: 1.25rem;
-  animation: floatBox 6s ease-in-out infinite alternate;
 }
 
-@keyframes floatBox {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-8px); }
+/* Top Pill Badge */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(18, 22, 34, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.modal-icon {
-  width: 54px;
-  height: 54px;
-  margin: 0 auto;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: grid;
-  place-items: center;
-  font-size: 1.6rem;
-  color: #FFFFFF;
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
-}
-
-.modal-box h2 {
-  font-family: var(--font-heading);
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  letter-spacing: -0.3px;
-}
-
-.modal-box p {
-  font-size: 0.88rem;
-  color: #CBD5E1;
-  line-height: 1.55;
-}
-
-.btn-ferrofluid {
+.badge-pill {
   background: #FFFFFF;
-  color: #04060A;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 24px rgba(255, 255, 255, 0.25);
-  transition: all 0.2s ease;
+  color: #000000;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
 }
 
-.btn-ferrofluid:hover {
-  background: #F1F5F9;
+.badge-text {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+/* Giant Bold Headline */
+.hero-title {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: clamp(2.6rem, 6.5vw, 4.2rem);
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 0.2rem 0;
+}
+
+/* Subtitle */
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 580px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+/* Hero Button Pair */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.hero-btn-primary {
+  background: #FFFFFF;
+  color: #000000;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+}
+
+.hero-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(255, 255, 255, 0.4);
+  background: #F1F5F9;
+}
+
+.hero-btn-secondary {
+  background: rgba(22, 26, 38, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #FFFFFF;
 }
