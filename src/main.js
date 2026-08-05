@@ -1,0 +1,209 @@
+import { AudioEngine } from './audioEngine.js';
+import { NoteWheel } from './noteWheel.js';
+import { VisionTracker } from './visionTracker.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const mainCanvas = document.getElementById('mainCanvas');
+  const webcamVideo = document.getElementById('webcamVideo');
+
+  const btnStartApp = document.getElementById('btnStartApp');
+  const startModal = document.getElementById('startModal');
+  const btnToggleCamera = document.getElementById('btnToggleCamera');
+  const btnTestAudio = document.getElementById('btnTestAudio');
+
+  const cameraDot = document.getElementById('cameraDot');
+  const cameraStatusText = document.getElementById('cameraStatusText');
+  const audioDot = document.getElementById('audioDot');
+  const audioStatusText = document.getElementById('audioStatusText');
+
+  const volSlider = document.getElementById('volSlider');
+  const volVal = document.getElementById('volVal');
+  const revSlider = document.getElementById('revSlider');
+  const revVal = document.getElementById('revVal');
+  const octaveLabel = document.getElementById('octaveLabel');
+
+  const audioEngine = new AudioEngine();
+  const noteWheel = new NoteWheel(mainCanvas);
+  
+  let latestCursorPos = { x: -1, y: -1, isCamera: false };
+  let latestLandmarks = null;
+  let currentActiveNoteIndex = -1;
+
+  const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
+    if (handPos) {
+      latestCursorPos = handPos;
+      latestLandmarks = landmarks;
+    } else if (latestCursorPos.isCamera) {
+      latestCursorPos = { x: -1, y: -1, isCamera: false };
+      latestLandmarks = null;
+    }
+  });
+
+  // Pointer Listeners
+  function updatePointerPos(e) {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    latestCursorPos = {
+      x: clientX,
+      y: clientY,
+      isCamera: false
+    };
+    latestLandmarks = null;
+  }
+
+  window.addEventListener('mousemove', updatePointerPos);
+  window.addEventListener('touchstart', (e) => { updatePointerPos(e); });
+  window.addEventListener('touchmove', (e) => { updatePointerPos(e); e.preventDefault(); });
+
+  window.addEventListener('mouseleave', () => {
+    if (!latestCursorPos.isCamera) {
+      latestCursorPos = { x: -1, y: -1, isCamera: false };
+      latestLandmarks = null;
+    }
+  });
+
+  // Render Frame Loop
+  function renderLoop() {
+    const detectedNoteIndex = noteWheel.getNoteAtPosition(latestCursorPos);
+
+    if (detectedNoteIndex !== currentActiveNoteIndex) {
+      if (currentActiveNoteIndex >= 0) {
+        const oldNote = noteWheel.notes[currentActiveNoteIndex];
+        audioEngine.stopNote(oldNote.name);
+      }
+
+      if (detectedNoteIndex >= 0) {
+        const newNote = noteWheel.notes[detectedNoteIndex];
+        audioEngine.startNote(newNote.name);
+        noteWheel.triggerRipple(detectedNoteIndex);
+      }
+
+      currentActiveNoteIndex = detectedNoteIndex;
+    }
+
+    let waveformData = null;
+    let currentFreq = null;
+
+    if (currentActiveNoteIndex >= 0) {
+      const activeNote = noteWheel.notes[currentActiveNoteIndex];
+      currentFreq = audioEngine.getFrequency(activeNote.name);
+      waveformData = audioEngine.getWaveformData();
+
+      audioDot.classList.add('active');
+      audioStatusText.textContent = `Playing ${activeNote.name}${audioEngine.octave}`;
+    } else {
+      audioDot.classList.remove('active');
+      audioStatusText.textContent = 'Audio Idle';
+    }
+
+    noteWheel.draw(latestCursorPos, latestLandmarks, waveformData, currentFreq);
+
+    requestAnimationFrame(renderLoop);
+  }
+
+  // App Init
+  async function initApp() {
+    audioEngine.init();
+    audioEngine.resume();
+    startModal.classList.add('hidden');
+
+    const cameraSuccess = await visionTracker.startCamera();
+    updateCameraUIStatus(cameraSuccess);
+
+    renderLoop();
+  }
+
+  function updateCameraUIStatus(active) {
+    if (active) {
+      cameraDot.classList.add('active');
+      cameraStatusText.textContent = 'Vision Active';
+      btnToggleCamera.innerHTML = '<span>⏹️</span> Stop Camera';
+      btnToggleCamera.classList.remove('btn-primary');
+      btnToggleCamera.classList.add('btn-secondary');
+    } else {
+      cameraDot.classList.remove('active');
+      cameraStatusText.textContent = 'Camera Off';
+      btnToggleCamera.innerHTML = '<span>📹</span> Start Camera';
+      btnToggleCamera.classList.remove('btn-secondary');
+      btnToggleCamera.classList.add('btn-primary');
+    }
+  }
+
+  btnStartApp.addEventListener('click', initApp);
+
+  btnToggleCamera.addEventListener('click', async () => {
+    audioEngine.init();
+    audioEngine.resume();
+
+    if (visionTracker.isRunning) {
+      visionTracker.stopCamera();
+      updateCameraUIStatus(false);
+    } else {
+      const success = await visionTracker.startCamera();
+      updateCameraUIStatus(success);
+    }
+  });
+
+  btnTestAudio.addEventListener('click', () => {
+    audioEngine.init();
+    audioEngine.resume();
+    audioEngine.triggerNoteInstant('A', 4, 0.6);
+    noteWheel.triggerRipple(0);
+  });
+
+  // Dropdown Toggle Click Event Listeners
+  document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const parent = btn.closest('.nav-item');
+      document.querySelectorAll('.nav-item').forEach(item => {
+        if (item !== parent) item.classList.remove('open');
+      });
+      parent.classList.toggle('open');
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
+  });
+
+  // Timbre Selectors
+  document.querySelectorAll('.timbre-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.timbre-btn').forEach(b => b.classList.remove('active'));
+      const target = e.currentTarget;
+      target.classList.add('active');
+      const timbre = target.getAttribute('data-timbre');
+      audioEngine.setTimbre(timbre);
+    });
+  });
+
+  // Octave Selectors
+  document.querySelectorAll('.oct-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.oct-btn').forEach(b => b.classList.remove('active'));
+      const target = e.currentTarget;
+      target.classList.add('active');
+      const oct = parseInt(target.getAttribute('data-octave'), 10);
+      audioEngine.setOctave(oct);
+      octaveLabel.textContent = oct;
+
+      audioEngine.stopAllNotes();
+      currentActiveNoteIndex = -1;
+    });
+  });
+
+  // Volume & Reverb Sliders
+  volSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    volVal.textContent = `${val}%`;
+    audioEngine.setVolume(val / 100);
+  });
+
+  revSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    revVal.textContent = `${val}%`;
+    audioEngine.setReverb(val / 100);
+  });
+});

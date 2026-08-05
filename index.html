@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rhythmos - Vision Gesture Music Player</title>
+  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking and Web Audio synthesis.">
+  
+  <link rel="stylesheet" href="./src/style.css">
+  
+  <!-- MediaPipe Hands & Camera Utils CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- Fullscreen Camera Stream Layer -->
+  <div class="fullscreen-viewport">
+    <video id="webcamVideo" playsinline muted></video>
+    <canvas id="mainCanvas"></canvas>
+  </div>
+
+  <!-- Top Dropdown Navigation Menu Bar -->
+  <header class="top-navbar">
+    <div class="nav-brand">
+      <div class="logo-icon">🎵</div>
+      <div class="brand-text">
+        <h1>Rhythmos</h1>
+        <p>A to G# Scale</p>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu Item 1: Camera Controls -->
+    <div class="nav-item dropdown">
+      <button class="nav-btn dropdown-toggle">
+        <span>📹</span> Vision <span class="arrow">▾</span>
+      </button>
+      <div class="dropdown-menu">
+        <div class="dropdown-header">Camera Control</div>
+        <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.5rem;">
+          <span>📹</span> Start Camera
+        </button>
+        <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
+          <span class="badge-dot" id="cameraDot"></span>
+          <span id="cameraStatusText">Camera Off</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu Item 2: Instrument Timbre -->
+    <div class="nav-item dropdown">
+      <button class="nav-btn dropdown-toggle">
+        <span>🎹</span> Instrument <span class="arrow">▾</span>
+      </button>
+      <div class="dropdown-menu">
+        <div class="dropdown-header">Select Timbre</div>
+        <div class="timbre-list">
+          <button class="timbre-btn active" data-timbre="synth">🎹 Grand Synth</button>
+          <button class="timbre-btn" data-timbre="chime">🔔 Crystal Chime</button>
+          <button class="timbre-btn" data-timbre="marimba">🪵 Marimba</button>
+          <button class="timbre-btn" data-timbre="pad">🌌 Cosmic Pad</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu Item 3: Octave Selection -->
+    <div class="nav-item dropdown">
+      <button class="nav-btn dropdown-toggle">
+        <span>🎼</span> Octave (<span id="octaveLabel">4</span>) <span class="arrow">▾</span>
+      </button>
+      <div class="dropdown-menu">
+        <div class="dropdown-header">Octave Pitch Range</div>
+        <div class="octave-bar">
+          <button class="oct-btn" data-octave="2">2</button>
+          <button class="oct-btn" data-octave="3">3</button>
+          <button class="oct-btn active" data-octave="4">4</button>
+          <button class="oct-btn" data-octave="5">5</button>
+          <button class="oct-btn" data-octave="6">6</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Menu Item 4: Audio Mix & Sliders -->
+    <div class="nav-item dropdown">
+      <button class="nav-btn dropdown-toggle">
+        <span>🎚️</span> Audio Mix <span class="arrow">▾</span>
+      </button>
+      <div class="dropdown-menu" style="min-width: 220px;">
+        <div class="control-group">
+          <div class="control-label">
+            <span>Master Volume</span>
+            <span id="volVal">80%</span>
+          </div>
+          <input type="range" id="volSlider" min="0" max="100" value="80">
+        </div>
+        <div class="control-group" style="margin-top: 0.75rem;">
+          <div class="control-label">
+            <span>Space Reverb</span>
+            <span id="revVal">30%</span>
+          </div>
+          <input type="range" id="revSlider" min="0" max="100" value="30">
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Audio Test -->
+    <button id="btnTestAudio" class="nav-btn-action">
+      <span>🔔</span> Test Note
+    </button>
+
+    <!-- Audio Status Indicator -->
+    <div class="badge" id="audioBadge" style="margin-left: auto;">
+      <span class="badge-dot" id="audioDot"></span>
+      <span id="audioStatusText">Audio Idle</span>
+    </div>
+  </header>
+
+  <!-- Autoplay / Camera Start Splash Modal -->
+  <div class="modal-backdrop" id="startModal">
+    <div class="modal-box">
+      <div class="modal-icon">🎵</div>
+      <h2>Welcome to Rhythmos</h2>
+      <p>Hover your index finger over the grey chromatic note wheel on the right side of the screen to play notes cleanly in real time.</p>
+
+      <button id="btnStartApp" class="btn-primary" style="font-size: 1.1rem; padding: 0.9rem;">
+        🚀 Initialize Audio & Vision
+      </button>
+      
+      <p style="font-size: 0.75rem; opacity: 0.7;">
+        Top menu bar contains dropdown settings for camera, instruments, octaves, and volume.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
