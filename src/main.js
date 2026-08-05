@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initialLoadAnimation: true
       });
     } catch (e) {
-      console.warn('PillNav animation setup warning:', e);
+      console.warn('PillNav notice:', e);
     }
   }
 
@@ -67,13 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
         mouseStrength: 0.4
       });
     } catch (e) {
-      console.warn('Topography WebGL background warning:', e);
+      console.warn('Topography notice:', e);
     }
   }
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
   let currentActiveNoteIndex = -1;
+  let isLoopRunning = false;
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
@@ -156,16 +157,39 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(renderLoop);
   }
 
-  // App Start Handler
-  async function initApp() {
-    audioEngine.init();
-    audioEngine.resume();
-    startModal.classList.add('hidden');
+  function startRenderLoop() {
+    if (!isLoopRunning) {
+      isLoopRunning = true;
+      renderLoop();
+    }
+  }
 
-    const cameraSuccess = await visionTracker.startCamera();
-    updateCameraUIStatus(cameraSuccess);
+  // App Start Handler - Immediate 100% Non-Blocking Response
+  function initApp() {
+    // 1. Immediately hide splash modal visually & via class
+    if (startModal) {
+      startModal.style.display = 'none';
+      startModal.classList.add('hidden');
+    }
 
-    renderLoop();
+    // 2. Initialize Web Audio API
+    try {
+      audioEngine.init();
+      audioEngine.resume();
+    } catch (e) {
+      console.warn('AudioContext resume notice:', e);
+    }
+
+    // 3. Start Camera Vision asynchronously without blocking UI
+    visionTracker.startCamera().then(cameraSuccess => {
+      updateCameraUIStatus(cameraSuccess);
+    }).catch(err => {
+      console.warn('Camera start notice:', err);
+      updateCameraUIStatus(false);
+    });
+
+    // 4. Ensure render loop is active
+    startRenderLoop();
   }
 
   function updateCameraUIStatus(active) {
@@ -184,27 +208,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  btnStartApp.addEventListener('click', initApp);
+  if (btnStartApp) {
+    btnStartApp.addEventListener('click', initApp);
+  }
 
-  btnToggleCamera.addEventListener('click', async () => {
-    audioEngine.init();
-    audioEngine.resume();
+  if (btnToggleCamera) {
+    btnToggleCamera.addEventListener('click', async () => {
+      audioEngine.init();
+      audioEngine.resume();
 
-    if (visionTracker.isRunning) {
-      visionTracker.stopCamera();
-      updateCameraUIStatus(false);
-    } else {
-      const success = await visionTracker.startCamera();
-      updateCameraUIStatus(success);
-    }
-  });
+      if (visionTracker.isRunning) {
+        visionTracker.stopCamera();
+        updateCameraUIStatus(false);
+      } else {
+        const success = await visionTracker.startCamera();
+        updateCameraUIStatus(success);
+      }
+    });
+  }
 
-  btnTestAudio.addEventListener('click', () => {
-    audioEngine.init();
-    audioEngine.resume();
-    audioEngine.triggerNoteInstant('A', 4, 0.6);
-    noteWheel.triggerRipple(0);
-  });
+  if (btnTestAudio) {
+    btnTestAudio.addEventListener('click', () => {
+      audioEngine.init();
+      audioEngine.resume();
+      audioEngine.triggerNoteInstant('A', 4, 0.6);
+      noteWheel.triggerRipple(0);
+    });
+  }
 
   // Pill Nav Dropdown Toggle Click Event Listeners
   document.querySelectorAll('.dropdown-toggle').forEach(btn => {
@@ -263,17 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Volume & Reverb Sliders
-  volSlider.addEventListener('input', (e) => {
-    const val = parseInt(e.target.value, 10);
-    volVal.textContent = `${val}%`;
-    audioEngine.setVolume(val / 100);
-  });
+  if (volSlider) {
+    volSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (volVal) volVal.textContent = `${val}%`;
+      audioEngine.setVolume(val / 100);
+    });
+  }
 
-  revSlider.addEventListener('input', (e) => {
-    const val = parseInt(e.target.value, 10);
-    revVal.textContent = `${val}%`;
-    audioEngine.setReverb(val / 100);
-  });
+  if (revSlider) {
+    revSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (revVal) revVal.textContent = `${val}%`;
+      audioEngine.setReverb(val / 100);
+    });
+  }
 
   // Mobile menu buttons
   const mobileCameraBtn = document.getElementById('mobileCameraBtn');
@@ -293,6 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Ensure render loop starts even if splash modal hasn't been clicked yet
-  renderLoop();
+  // Start initial render loop immediately
+  startRenderLoop();
 });
