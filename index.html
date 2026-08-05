@@ -23,8 +23,165 @@
   <!-- Songbook & Teleprompter Drawer (Left Side) -->
   <aside class="songbook-drawer collapsed" id="songbookDrawer"></aside>
 
-  <!-- React Navbar Mounting Target -->
-  <div id="react-navbar-root"></div>
+  <!-- Top Header Navigation (Header-03 Component Design) -->
+  <header class="fixed top-0 bg-background/50 backdrop-blur-md left-0 w-full z-50">
+    <div class="px-3">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Left Brand Pill -->
+        <div class="flex border border-white/20 bg-slate-900/90 rounded-md h-14 px-4 items-center">
+          <a href="#" aria-label="home" class="flex gap-2 whitespace-nowrap items-center text-white">
+            <div class="logo-box">🎵</div>
+            <span class="font-semibold pr-2 text-xl text-white">Rhythmos</span>
+          </a>
+        </div>
+
+        <!-- Center Desktop Navigation (Header-03 NavigationMenu Layout) -->
+        <nav class="hidden lg:flex items-center space-x-1">
+          <div class="navigation-menu-root">
+            <ul class="navigation-menu-list">
+              
+              <!-- Instrument Dropdown (Displays Selected Instrument at Top!) -->
+              <li class="navigation-menu-item dropdown">
+                <button class="navigation-menu-trigger bg-foreground h-14 px-6 text-lg text-background dropdown-toggle">
+                  <span id="currentInstLabel">🪗 Harmonium</span>
+                  <span class="chevron-icon">▾</span>
+                </button>
+                <div class="navigation-menu-content dropdown-menu">
+                  <ul class="grid w-[550px] grid-cols-2 gap-3 p-4">
+                    <li>
+                      <button class="nav-card-link inst-btn active" data-inst="harmonium">
+                        <div class="text-sm font-semibold leading-none">🪗 Harmonium</div>
+                        <div class="text-xs text-muted-foreground mt-1">Free-reed Indian harmonium</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="piano">
+                        <div class="text-sm font-semibold leading-none">🎹 Grand Piano</div>
+                        <div class="text-xs text-muted-foreground mt-1">Steinway acoustic grand</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="guitar">
+                        <div class="text-sm font-semibold leading-none">🎸 Nylon Guitar</div>
+                        <div class="text-xs text-muted-foreground mt-1">Plucked acoustic nylon string</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="strings">
+                        <div class="text-sm font-semibold leading-none">🎻 Symphonic Strings</div>
+                        <div class="text-xs text-muted-foreground mt-1">Orchestral bowed violin section</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="marimba">
+                        <div class="text-sm font-semibold leading-none">🪵 Concert Marimba</div>
+                        <div class="text-xs text-muted-foreground mt-1">Rosewood bar & tube resonator</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="rhodes">
+                        <div class="text-sm font-semibold leading-none">⚡ Vintage Rhodes</div>
+                        <div class="text-xs text-muted-foreground mt-1">Tine bell electric piano</div>
+                      </button>
+                    </li>
+                    <li>
+                      <button class="nav-card-link inst-btn" data-inst="organ">
+                        <div class="text-sm font-semibold leading-none">⛪ Church Organ</div>
+                        <div class="text-xs text-muted-foreground mt-1">Cathedral 3-rank pipe organ</div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <!-- Vision Controls Dropdown -->
+              <li class="navigation-menu-item dropdown">
+                <button class="navigation-menu-trigger bg-foreground h-14 px-6 text-lg text-background dropdown-toggle">
+                  <span>📹 Vision</span>
+                  <span class="chevron-icon">▾</span>
+                </button>
+                <div class="navigation-menu-content dropdown-menu">
+                  <div class="p-4" style="width: 280px;">
+                    <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.75rem;">
+                      <span>📹</span> Start Camera
+                    </button>
+                    <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
+                      <span class="badge-dot" id="cameraDot"></span>
+                      <span id="cameraStatusText">Camera Off</span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <!-- Octave Range Dropdown -->
+              <li class="navigation-menu-item dropdown">
+                <button class="navigation-menu-trigger bg-foreground h-14 px-6 text-lg text-background dropdown-toggle">
+                  <span>🎼 Octave (<span id="octaveLabel">4</span>)</span>
+                  <span class="chevron-icon">▾</span>
+                </button>
+                <div class="navigation-menu-content dropdown-menu">
+                  <div class="p-4" style="width: 280px;">
+                    <div class="octave-bar">
+                      <button class="oct-btn" data-octave="2">2</button>
+                      <button class="oct-btn" data-octave="3">3</button>
+                      <button class="oct-btn active" data-octave="4">4</button>
+                      <button class="oct-btn" data-octave="5">5</button>
+                      <button class="oct-btn" data-octave="6">6</button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <!-- Audio Mix Dropdown -->
+              <li class="navigation-menu-item dropdown">
+                <button class="navigation-menu-trigger bg-foreground h-14 px-6 text-lg text-background dropdown-toggle">
+                  <span>🎚️ Audio Mix</span>
+                  <span class="chevron-icon">▾</span>
+                </button>
+                <div class="navigation-menu-content dropdown-menu">
+                  <div class="p-4" style="width: 300px; display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div class="control-group">
+                      <div class="control-label">
+                        <span>Master Volume</span>
+                        <span id="volVal">85%</span>
+                      </div>
+                      <input type="range" id="volSlider" min="0" max="100" value="85">
+                    </div>
+                    <div class="control-group">
+                      <div class="control-label">
+                        <span>Concert Reverb</span>
+                        <span id="revVal">35%</span>
+                      </div>
+                      <input type="range" id="revSlider" min="0" max="100" value="35">
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Right Header CTA Buttons -->
+        <div class="hidden gap-2 lg:flex items-center">
+          <button id="btnToggleSongbookDrawer" class="btn-cta-header px-6 h-14">
+            <span>🎤</span> Songbook Lyrics
+          </button>
+
+          <button id="btnTestAudio" class="btn-cta-secondary px-4 h-14">
+            🔔 Test Note
+          </button>
+
+          <div class="badge" id="audioBadge">
+            <span class="badge-dot" id="audioDot"></span>
+            <span id="audioStatusText">Idle</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
 
   <!-- Hero Splash Screen with Ferrofluid Background -->
   <div class="modal-backdrop" id="startModal">
@@ -52,6 +209,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.jsx"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

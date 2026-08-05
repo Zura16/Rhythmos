@@ -8,6 +8,7 @@
   --text-main: #F8FAFC;
   --text-dark: #0F172A;
   --text-muted: #94A3B8;
+  --text-muted-foreground: #94A3B8;
   --accent-cyan: #00E5FF;
   --font-heading: 'Inter', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
@@ -59,203 +60,236 @@ body {
   cursor: crosshair;
 }
 
-/* Header-03 Navigation Navbar */
-.header-navbar {
+/* Header-03 Top Fixed Bar: fixed top-0 bg-background/50 backdrop-blur-md left-0 w-full z-50 */
+header.fixed {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
+  width: 100%;
   z-index: 50;
-  height: 5rem;
   background: rgba(9, 13, 22, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  display: flex;
-  align-items: center;
-  padding: 0 1.5rem;
 }
 
-.header-container {
-  width: 100%;
+.h-20 {
+  height: 5rem;
+}
+
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.flex {
   display: flex;
+}
+
+.items-center {
   align-items: center;
+}
+
+.justify-between {
   justify-content: space-between;
-  gap: 1rem;
 }
 
-/* Brand Section */
-.nav-brand-block {
-  display: flex;
-  align-items: center;
+.space-x-1 > * + * {
+  margin-left: 0.25rem;
 }
 
-.brand-link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 0.45rem 0.95rem;
-  border-radius: 12px;
+.gap-2 {
+  gap: 0.5rem;
 }
 
-.logo-badge {
-  width: 34px;
-  height: 34px;
+.logo-box {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   background: #334155;
   display: grid;
   place-items: center;
-  font-size: 1.1rem;
-  color: #FFFFFF;
+  font-size: 1rem;
 }
 
-.brand-title h1 {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1;
+/* Header-03 NavigationMenu Layout */
+.navigation-menu-root {
+  position: relative;
+  z-index: 10;
 }
 
-.brand-title span {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* Navigation Menu (Header-03 Style Triggers & Popover Cards) */
-.nav-dropdown-group {
+.navigation-menu-list {
   display: flex;
+  list-style: none;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.35rem;
 }
 
-.nav-item {
+.navigation-menu-item {
   position: relative;
 }
 
-/* Header-03 NavigationMenuTrigger Styling: h-14 (3.5rem), px-6, text-lg */
-.nav-trigger-btn {
+/* Header-03 NavigationMenuTrigger: bg-foreground h-14 px-6 text-lg text-background */
+.navigation-menu-trigger {
+  height: 3.5rem;
+  padding: 0 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-radius: 10px;
   background: #FFFFFF;
   color: #0F172A;
-  height: 3.25rem;
-  padding: 0 1.35rem;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
   border: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
 }
 
-.nav-trigger-btn:hover, .nav-item.open .nav-trigger-btn {
+.navigation-menu-trigger:hover, .navigation-menu-item.open .navigation-menu-trigger {
   background: #F1F5F9;
   transform: translateY(-1px);
 }
 
 .chevron-icon {
   font-size: 0.8rem;
-  opacity: 0.8;
   transition: transform 0.3s ease;
 }
 
-.nav-item.open .chevron-icon {
+.navigation-menu-item.open .chevron-icon {
   transform: rotate(180deg);
 }
 
-/* Header-03 NavigationMenuContent Card Popover */
-.dropdown-content-card {
+/* Header-03 NavigationMenuContent Dropdown Menu Popover */
+.navigation-menu-content {
   position: absolute;
   top: calc(100% + 0.65rem);
   left: 0;
-  width: 320px;
   background: var(--bg-popover);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border-neutral);
   border-radius: 16px;
-  padding: 0.85rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px) scale(0.97);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
+  z-index: 100;
 }
 
-.nav-item:hover .dropdown-content-card,
-.nav-item.open .dropdown-content-card {
+.navigation-menu-item:hover .navigation-menu-content,
+.navigation-menu-item.open .navigation-menu-content {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
-.dropdown-header {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--border-neutral);
-  margin-bottom: 0.2rem;
+.grid {
+  display: grid;
 }
 
-/* Header-03 Menu Grid Items (rounded-lg p-3 hover:bg-primary hover:text-background) */
-.nav-menu-grid {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+.w-\[550px\] {
+  width: 550px;
 }
 
-.nav-item-card {
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+/* Header-03 Popover Item Cards: rounded-lg p-3 hover:bg-primary hover:text-background */
+.nav-card-link {
   width: 100%;
+  display: block;
+  user-select: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  line-height: 1;
+  text-decoration: none;
+  outline: none;
+  transition: all 0.15s ease;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   color: var(--text-main);
-  padding: 0.65rem 0.85rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  transition: all 0.15s ease;
 }
 
-.nav-item-card:hover {
+.nav-card-link:hover {
   background: #FFFFFF;
   color: #0F172A;
-  font-weight: 700;
   transform: translateX(2px);
 }
 
-.nav-item-card.active {
+.nav-card-link.active {
   background: #FFFFFF;
   color: #0F172A;
   font-weight: 800;
   border-color: #FFFFFF;
 }
 
-.card-icon {
-  font-size: 1.1rem;
+.nav-card-link .text-muted-foreground {
+  color: var(--text-muted);
 }
 
-.card-text {
-  flex: 1;
+.nav-card-link:hover .text-muted-foreground {
+  color: #475569;
+}
+
+/* CTA Header Buttons: px-6 h-14 */
+.btn-cta-header {
+  height: 3.5rem;
+  padding: 0 1.5rem;
+  border-radius: 10px;
+  background: rgba(0, 229, 255, 0.2);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.15s ease;
+}
+
+.btn-cta-header:hover {
+  background: rgba(0, 229, 255, 0.35);
+}
+
+.btn-cta-secondary {
+  height: 3.5rem;
+  padding: 0 1.25rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-neutral);
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* Octave Bar */
@@ -279,43 +313,6 @@ body {
   background: #FFFFFF;
   color: var(--text-dark);
   font-weight: 800;
-}
-
-/* Header Actions */
-.header-actions-group {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.nav-action-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--border-neutral);
-  color: var(--text-main);
-  height: 3.25rem;
-  padding: 0 1.2rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: background 0.15s ease;
-}
-
-.nav-action-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.songbook-trigger {
-  background: rgba(0, 229, 255, 0.18);
-  border-color: rgba(0, 229, 255, 0.45);
-  color: #FFFFFF;
-}
-
-.songbook-trigger:hover {
-  background: rgba(0, 229, 255, 0.32);
 }
 
 /* Badges */
