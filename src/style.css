@@ -60,7 +60,7 @@ body {
   cursor: crosshair;
 }
 
-/* Header-03 Top Fixed Bar: fixed top-0 bg-background/50 backdrop-blur-md left-0 w-full z-50 */
+/* Header-03 Top Fixed Bar */
 header.fixed {
   position: fixed;
   top: 0;
@@ -77,9 +77,9 @@ header.fixed {
   height: 5rem;
 }
 
-.px-3 {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .flex {
@@ -92,10 +92,6 @@ header.fixed {
 
 .justify-between {
   justify-content: space-between;
-}
-
-.space-x-1 > * + * {
-  margin-left: 0.25rem;
 }
 
 .gap-2 {
@@ -112,60 +108,113 @@ header.fixed {
   font-size: 1rem;
 }
 
-/* Header-03 NavigationMenu Layout */
-.navigation-menu-root {
+/* ============================================================ */
+/* REACT BITS - GOOEY NAV LIQUID BLOB STYLING                    */
+/* ============================================================ */
+.gooey-nav-container {
+  display: flex;
+  align-items: center;
   position: relative;
   z-index: 10;
 }
 
-.navigation-menu-list {
-  display: flex;
-  list-style: none;
-  align-items: center;
-  gap: 0.35rem;
+.gooey-nav-wrapper {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 0.35rem 0.5rem;
 }
 
-.navigation-menu-item {
+/* Liquid Blob Layer with SVG Filter */
+.gooey-blob-layer {
+  position: absolute;
+  inset: 0;
+  filter: url(#gooey-filter);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gooey-indicator {
+  position: absolute;
+  top: 0.35rem;
+  height: calc(100% - 0.7rem);
+  background: #FFFFFF;
+  border-radius: 10px;
+  transition: left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.gooey-particles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gooey-particle {
+  position: absolute;
+  background: #FFFFFF;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: gooeyPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes gooeyPop {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.1);
+  }
+}
+
+/* Gooey Item List & Tabs */
+.gooey-items-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  gap: 0.35rem;
+  position: relative;
+  z-index: 2;
+}
+
+.gooey-nav-item {
   position: relative;
 }
 
-/* Header-03 NavigationMenuTrigger: bg-foreground h-14 px-6 text-lg text-background */
-.navigation-menu-trigger {
-  height: 3.5rem;
-  padding: 0 1.5rem;
-  font-size: 1.05rem;
+.gooey-tab-btn {
+  height: 3.25rem;
+  padding: 0 1.25rem;
+  font-size: 0.98rem;
   font-weight: 700;
   border-radius: 10px;
-  background: #FFFFFF;
-  color: #0F172A;
+  background: transparent;
+  color: #FFFFFF;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
+  gap: 0.45rem;
+  transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
-.navigation-menu-trigger:hover, .navigation-menu-item.open .navigation-menu-trigger {
-  background: #F1F5F9;
-  transform: translateY(-1px);
+.gooey-nav-item.active .gooey-tab-btn {
+  color: #0F172A;
+  font-weight: 800;
 }
 
-.chevron-icon {
-  font-size: 0.8rem;
-  transition: transform 0.3s ease;
-}
-
-.navigation-menu-item.open .chevron-icon {
+.gooey-nav-item.open .chevron-icon {
   transform: rotate(180deg);
 }
 
-/* Header-03 NavigationMenuContent Dropdown Menu Popover */
-.navigation-menu-content {
+/* Gooey Dropdown Popover */
+.gooey-dropdown-popover {
   position: absolute;
-  top: calc(100% + 0.65rem);
+  top: calc(100% + 0.75rem);
   left: 0;
   background: var(--bg-popover);
   backdrop-filter: blur(24px);
@@ -181,8 +230,8 @@ header.fixed {
   z-index: 100;
 }
 
-.navigation-menu-item:hover .navigation-menu-content,
-.navigation-menu-item.open .navigation-menu-content {
+.gooey-nav-item:hover .gooey-dropdown-popover,
+.gooey-nav-item.open .gooey-dropdown-popover {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
@@ -213,7 +262,7 @@ header.fixed {
   padding: 0.5rem;
 }
 
-/* Header-03 Popover Item Cards: rounded-lg p-3 hover:bg-primary hover:text-background */
+/* Menu Item Link Cards */
 .nav-card-link {
   width: 100%;
   display: block;
