@@ -1,5 +1,4 @@
-import { gsap } from 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js';
-
+// PillNav GSAP Liquid Animation Engine
 export class PillNav {
   constructor(container, options = {}) {
     this.container = container;
@@ -20,6 +19,10 @@ export class PillNav {
     this.init();
   }
 
+  get gsap() {
+    return window.gsap || null;
+  }
+
   init() {
     this.layout();
 
@@ -30,18 +33,18 @@ export class PillNav {
 
     this.bindEvents();
 
-    if (this.options.initialLoadAnimation) {
+    if (this.options.initialLoadAnimation && this.gsap) {
       const logo = this.container.querySelector('.pill-logo');
       const navItems = this.container.querySelector('.pill-nav-items');
 
       if (logo) {
-        gsap.set(logo, { scale: 0 });
-        gsap.to(logo, { scale: 1, duration: 0.6, ease: this.options.ease });
+        this.gsap.set(logo, { scale: 0 });
+        this.gsap.to(logo, { scale: 1, duration: 0.6, ease: this.options.ease });
       }
 
       if (navItems) {
-        gsap.set(navItems, { width: 0, overflow: 'hidden' });
-        gsap.to(navItems, { width: 'auto', duration: 0.6, ease: this.options.ease });
+        this.gsap.set(navItems, { width: 0, overflow: 'hidden' });
+        this.gsap.to(navItems, { width: 'auto', duration: 0.6, ease: this.options.ease });
       }
     }
   }
@@ -67,33 +70,35 @@ export class PillNav {
       circle.style.height = `${D}px`;
       circle.style.bottom = `-${delta}px`;
 
-      gsap.set(circle, {
-        xPercent: -50,
-        scale: 0,
-        transformOrigin: `50% ${originY}px`
-      });
+      if (this.gsap) {
+        this.gsap.set(circle, {
+          xPercent: -50,
+          scale: 0,
+          transformOrigin: `50% ${originY}px`
+        });
 
-      const label = pill.querySelector('.pill-label');
-      const white = pill.querySelector('.pill-label-hover');
+        const label = pill.querySelector('.pill-label');
+        const white = pill.querySelector('.pill-label-hover');
 
-      if (label) gsap.set(label, { y: 0 });
-      if (white) gsap.set(white, { y: h + 12, opacity: 0 });
+        if (label) this.gsap.set(label, { y: 0 });
+        if (white) this.gsap.set(white, { y: h + 12, opacity: 0 });
 
-      this.tlRefs[index]?.kill();
-      const tl = gsap.timeline({ paused: true });
+        this.tlRefs[index]?.kill();
+        const tl = this.gsap.timeline({ paused: true });
 
-      tl.to(circle, { scale: 1.2, xPercent: -50, duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
+        tl.to(circle, { scale: 1.2, xPercent: -50, duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
 
-      if (label) {
-        tl.to(label, { y: -(h + 8), duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
+        if (label) {
+          tl.to(label, { y: -(h + 8), duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
+        }
+
+        if (white) {
+          this.gsap.set(white, { y: Math.ceil(h + 100), opacity: 0 });
+          tl.to(white, { y: 0, opacity: 1, duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
+        }
+
+        this.tlRefs[index] = tl;
       }
-
-      if (white) {
-        gsap.set(white, { y: Math.ceil(h + 100), opacity: 0 });
-        tl.to(white, { y: 0, opacity: 1, duration: 2, ease: this.options.ease, overwrite: 'auto' }, 0);
-      }
-
-      this.tlRefs[index] = tl;
     });
   }
 
@@ -138,9 +143,10 @@ export class PillNav {
   }
 
   handleLogoEnter(logo) {
+    if (!this.gsap) return;
     const icon = logo.querySelector('.pill-logo-icon') || logo;
-    gsap.set(icon, { rotate: 0 });
-    gsap.to(icon, {
+    this.gsap.set(icon, { rotate: 0 });
+    this.gsap.to(icon, {
       rotate: 360,
       duration: 0.35,
       ease: this.options.ease,
@@ -153,21 +159,21 @@ export class PillNav {
     const hamburger = this.container.querySelector('.mobile-menu-button');
     const menu = this.container.querySelector('.mobile-menu-popover');
 
-    if (hamburger) {
+    if (hamburger && this.gsap) {
       const lines = hamburger.querySelectorAll('.hamburger-line');
       if (this.isMobileMenuOpen) {
-        gsap.to(lines[0], { rotation: 45, y: 3, duration: 0.3, ease: this.options.ease });
-        gsap.to(lines[1], { rotation: -45, y: -3, duration: 0.3, ease: this.options.ease });
+        this.gsap.to(lines[0], { rotation: 45, y: 3, duration: 0.3, ease: this.options.ease });
+        this.gsap.to(lines[1], { rotation: -45, y: -3, duration: 0.3, ease: this.options.ease });
       } else {
-        gsap.to(lines[0], { rotation: 0, y: 0, duration: 0.3, ease: this.options.ease });
-        gsap.to(lines[1], { rotation: 0, y: 0, duration: 0.3, ease: this.options.ease });
+        this.gsap.to(lines[0], { rotation: 0, y: 0, duration: 0.3, ease: this.options.ease });
+        this.gsap.to(lines[1], { rotation: 0, y: 0, duration: 0.3, ease: this.options.ease });
       }
     }
 
-    if (menu) {
+    if (menu && this.gsap) {
       if (this.isMobileMenuOpen) {
-        gsap.set(menu, { visibility: 'visible' });
-        gsap.fromTo(
+        this.gsap.set(menu, { visibility: 'visible' });
+        this.gsap.fromTo(
           menu,
           { opacity: 0, y: 10 },
           {
@@ -179,14 +185,14 @@ export class PillNav {
           }
         );
       } else {
-        gsap.to(menu, {
+        this.gsap.to(menu, {
           opacity: 0,
           y: 10,
           duration: 0.2,
           ease: this.options.ease,
           transformOrigin: 'top center',
           onComplete: () => {
-            gsap.set(menu, { visibility: 'hidden' });
+            this.gsap.set(menu, { visibility: 'hidden' });
           }
         });
       }

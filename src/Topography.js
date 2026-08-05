@@ -1,5 +1,4 @@
-import { Renderer, Program, Mesh, Triangle } from 'https://cdn.jsdelivr.net/npm/ogl@1.0.11/dist/ogl.mjs';
-
+// Topography WebGL Background Renderer using OGL
 const hexToRgb = hex => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 1, 1];
@@ -175,95 +174,99 @@ export class Topography {
     this.init();
   }
 
+  get OGL() {
+    return window.OGL || null;
+  }
+
   init() {
-    this.renderer = new Renderer({
-      webgl: 2,
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
-    });
+    if (!this.OGL) {
+      console.warn('OGL library not available yet.');
+      return;
+    }
 
-    const gl = this.renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
-    this.canvas = gl.canvas;
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.display = 'block';
-    this.container.appendChild(this.canvas);
+    try {
+      const { Renderer, Program, Mesh, Triangle } = this.OGL;
 
-    const geometry = new Triangle(gl);
-    this.program = new Program(gl, {
-      vertex,
-      fragment,
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: { value: new Float32Array([1, 1]) },
-        uSpeed: { value: this.options.speed },
-        uMorphAmount: { value: this.options.morphAmount },
-        uMorphSpeed: { value: this.options.morphSpeed },
-        uBands: { value: this.options.bands },
-        uThickness: { value: this.options.thickness },
-        uScale: { value: this.options.scale },
-        uPixelSize: { value: this.options.pixelSize },
-        uGlow: { value: this.options.glow },
-        uColorMode: { value: colorModeToFloat(this.options.colorMode) },
-        uContrast: { value: this.options.contrast },
-        uBrightness: { value: this.options.brightness },
-        uFillBands: { value: this.options.fillBands ? 1.0 : 0.0 },
-        uOpacity: { value: this.options.opacity },
-        uGrain: { value: this.options.grain ? 1.0 : 0.0 },
-        uGrainIntensity: { value: this.options.grainIntensity },
-        uLow: { value: new Float32Array(hexToRgb(this.options.lowColor)) },
-        uMid: { value: new Float32Array(hexToRgb(this.options.midColor)) },
-        uHigh: { value: new Float32Array(hexToRgb(this.options.highColor)) },
-        uMouse: { value: new Float32Array([0.5, 0.5]) },
-        uMouseEnabled: { value: this.options.mouseInteraction ? 1.0 : 0.0 },
-        uMouseRadius: { value: this.options.mouseRadius },
-        uMouseStrength: { value: this.options.mouseStrength },
-        uMouseActive: { value: 0.0 },
-        uCtrlA: { value: new Float32Array([0, 0, 0, 0]) },
-        uCtrlB: { value: new Float32Array([0, 0, 0, 0]) },
-        uCtrlC: { value: new Float32Array([0, 0, 0, 0]) },
-        uCtrlD: { value: new Float32Array([0, 0, 0, 0]) }
-      }
-    });
+      this.renderer = new Renderer({
+        webgl: 2,
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: false,
+        dpr: Math.min(window.devicePixelRatio || 1, 2)
+      });
 
-    this.mesh = new Mesh(gl, { geometry, program: this.program });
+      const gl = this.renderer.gl;
+      gl.clearColor(0, 0, 0, 0);
+      this.canvas = gl.canvas;
+      this.canvas.style.width = '100%';
+      this.canvas.style.height = '100%';
+      this.canvas.style.display = 'block';
+      this.container.appendChild(this.canvas);
 
-    this.setSize();
-    this.ro = new ResizeObserver(() => this.setSize());
-    this.ro.observe(this.container);
+      const geometry = new Triangle(gl);
+      this.program = new Program(gl, {
+        vertex,
+        fragment,
+        uniforms: {
+          iTime: { value: 0 },
+          iResolution: { value: new Float32Array([1, 1]) },
+          uSpeed: { value: this.options.speed },
+          uMorphAmount: { value: this.options.morphAmount },
+          uMorphSpeed: { value: this.options.morphSpeed },
+          uBands: { value: this.options.bands },
+          uThickness: { value: this.options.thickness },
+          uScale: { value: this.options.scale },
+          uPixelSize: { value: this.options.pixelSize },
+          uGlow: { value: this.options.glow },
+          uColorMode: { value: colorModeToFloat(this.options.colorMode) },
+          uContrast: { value: this.options.contrast },
+          uBrightness: { value: this.options.brightness },
+          uFillBands: { value: this.options.fillBands ? 1.0 : 0.0 },
+          uOpacity: { value: this.options.opacity },
+          uGrain: { value: this.options.grain ? 1.0 : 0.0 },
+          uGrainIntensity: { value: this.options.grainIntensity },
+          uLow: { value: new Float32Array(hexToRgb(this.options.lowColor)) },
+          uMid: { value: new Float32Array(hexToRgb(this.options.midColor)) },
+          uHigh: { value: new Float32Array(hexToRgb(this.options.highColor)) },
+          uMouse: { value: new Float32Array([0.5, 0.5]) },
+          uMouseEnabled: { value: this.options.mouseInteraction ? 1.0 : 0.0 },
+          uMouseRadius: { value: this.options.mouseRadius },
+          uMouseStrength: { value: this.options.mouseStrength },
+          uMouseActive: { value: 0.0 },
+          uCtrlA: { value: new Float32Array([0, 0, 0, 0]) },
+          uCtrlB: { value: new Float32Array([0, 0, 0, 0]) },
+          uCtrlC: { value: new Float32Array([0, 0, 0, 0]) },
+          uCtrlD: { value: new Float32Array([0, 0, 0, 0]) }
+        }
+      });
 
-    this.currentMouse = [0.5, 0.5];
-    this.targetMouse = [0.5, 0.5];
-    this.mouseActive = 0;
-    this.mouseActiveTarget = 0;
+      this.mesh = new Mesh(gl, { geometry, program: this.program });
 
-    this.onMouseMove = e => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.targetMouse[0] = (e.clientX - rect.left) / rect.width;
-      this.targetMouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
-      this.mouseActiveTarget = 1;
-    };
-    this.onMouseLeave = () => {
+      this.setSize();
+      this.ro = new ResizeObserver(() => this.setSize());
+      this.ro.observe(this.container);
+
+      this.currentMouse = [0.5, 0.5];
+      this.targetMouse = [0.5, 0.5];
+      this.mouseActive = 0;
       this.mouseActiveTarget = 0;
-    };
-    window.addEventListener('mousemove', this.onMouseMove);
-    window.addEventListener('mouseleave', this.onMouseLeave);
 
-    this.ctrlArrays = [
-      this.program.uniforms.uCtrlA.value,
-      this.program.uniforms.uCtrlB.value,
-      this.program.uniforms.uCtrlC.value,
-      this.program.uniforms.uCtrlD.value
-    ];
+      this.ctrlArrays = [
+        this.program.uniforms.uCtrlA.value,
+        this.program.uniforms.uCtrlB.value,
+        this.program.uniforms.uCtrlC.value,
+        this.program.uniforms.uCtrlD.value
+      ];
 
-    this.t0 = performance.now();
-    this.loop();
+      this.t0 = performance.now();
+      this.loop();
+    } catch (e) {
+      console.error('Failed to initialize Topography WebGL:', e);
+    }
   }
 
   setSize() {
+    if (!this.renderer || !this.program) return;
     const rect = this.container.getBoundingClientRect();
     const w = Math.max(1, Math.floor(rect.width));
     const h = Math.max(1, Math.floor(rect.height));
@@ -274,6 +277,7 @@ export class Topography {
   }
 
   loop(t = performance.now()) {
+    if (!this.program || !this.renderer) return;
     const time = (t - this.t0) * 0.001;
     const u = this.program.uniforms;
     u.iTime.value = time;
@@ -303,6 +307,7 @@ export class Topography {
   }
 
   updateCursorPos(x, y) {
+    if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     this.targetMouse[0] = x / rect.width;
     this.targetMouse[1] = 1.0 - (y / rect.height);
@@ -312,8 +317,6 @@ export class Topography {
   destroy() {
     if (this.raf) cancelAnimationFrame(this.raf);
     if (this.ro) this.ro.disconnect();
-    window.removeEventListener('mousemove', this.onMouseMove);
-    window.removeEventListener('mouseleave', this.onMouseLeave);
     if (this.container && this.canvas) {
       try { this.container.removeChild(this.canvas); } catch(e) {}
     }

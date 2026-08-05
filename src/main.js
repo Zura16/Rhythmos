@@ -32,35 +32,43 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. React Bits <PillNav /> Component Initialization
   let pillNav = null;
   if (pillNavContainer) {
-    pillNav = new PillNav(pillNavContainer, {
-      ease: 'power3.easeOut',
-      baseColor: '#0F172A',
-      pillColor: '#E2E8F0',
-      hoveredPillTextColor: '#FFFFFF',
-      pillTextColor: '#0F172A',
-      initialLoadAnimation: true
-    });
+    try {
+      pillNav = new PillNav(pillNavContainer, {
+        ease: 'power3.easeOut',
+        baseColor: '#0F172A',
+        pillColor: '#E2E8F0',
+        hoveredPillTextColor: '#FFFFFF',
+        pillTextColor: '#0F172A',
+        initialLoadAnimation: true
+      });
+    } catch (e) {
+      console.warn('PillNav animation setup warning:', e);
+    }
   }
 
   // 3. React Bits <Topography /> Component Initialization
   let topography = null;
   if (topographyContainer) {
-    topography = new Topography(topographyContainer, {
-      lowColor: '#1E293B',
-      midColor: '#64748B',
-      highColor: '#CBD5E1',
-      speed: 0.25,
-      morphAmount: 2.5,
-      morphSpeed: 0.04,
-      bands: 2.5,
-      thickness: 0.012,
-      scale: 1.0,
-      glow: 0.3,
-      opacity: 0.55,
-      mouseInteraction: true,
-      mouseRadius: 0.3,
-      mouseStrength: 0.4
-    });
+    try {
+      topography = new Topography(topographyContainer, {
+        lowColor: '#1E293B',
+        midColor: '#64748B',
+        highColor: '#CBD5E1',
+        speed: 0.25,
+        morphAmount: 2.5,
+        morphSpeed: 0.04,
+        bands: 2.5,
+        thickness: 0.012,
+        scale: 1.0,
+        glow: 0.3,
+        opacity: 0.55,
+        mouseInteraction: true,
+        mouseRadius: 0.3,
+        mouseStrength: 0.4
+      });
+    } catch (e) {
+      console.warn('Topography WebGL background warning:', e);
+    }
   }
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
@@ -109,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Render Frame Loop
+  // Main Canvas Render Loop
   function renderLoop() {
     const detectedNoteIndex = noteWheel.getNoteAtPosition(latestCursorPos);
 
@@ -148,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(renderLoop);
   }
 
-  // App Init
+  // App Start Handler
   async function initApp() {
     audioEngine.init();
     audioEngine.resume();
@@ -284,4 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnTestAudio.click();
     });
   }
+
+  // Ensure render loop starts even if splash modal hasn't been clicked yet
+  renderLoop();
 });
