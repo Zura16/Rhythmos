@@ -13,10 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnLearnMore = document.getElementById('btnLearnMore');
   const startModal = document.getElementById('startModal');
   const ferrofluidContainer = document.getElementById('ferrofluidContainer');
-  
-  const btnToggleCamera = document.getElementById('btnToggleCamera');
-  const btnTestAudio = document.getElementById('btnTestAudio');
-  const btnToggleSongbookDrawer = document.getElementById('btnToggleSongbookDrawer');
   const songbookDrawer = document.getElementById('songbookDrawer');
 
   const cameraDot = document.getElementById('cameraDot');
@@ -39,7 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
     organ: '⛪ Church Organ'
   };
 
-  // Initialize React Bits PillNav Component with GSAP Hover Circle Animations
+  const audioEngine = new AudioEngine();
+  const noteWheel = new NoteWheel(mainCanvas);
+
+  // Initialize Songbook Teleprompter
+  const songBookManager = new SongBookManager(songbookDrawer, (selectedChordStr) => {
+    noteWheel.setHighlightedChord(selectedChordStr);
+  });
+  songBookManager.render();
+
+  // Initialize React Bits PillNav Component with ALL controls inside the single bar!
   const pillNavContainer = document.getElementById('pillNavContainer');
   let pillNav = null;
 
@@ -161,6 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           `
+        },
+        {
+          id: 'pillSongbook',
+          label: '🎤 Songbook Lyrics',
+          hasDropdown: false,
+          onClick: () => {
+            if (songbookDrawer) songbookDrawer.classList.toggle('collapsed');
+          }
+        },
+        {
+          id: 'pillTestAudio',
+          label: '🔔 Test Note',
+          hasDropdown: false,
+          onClick: () => {
+            audioEngine.init();
+            audioEngine.resume();
+            audioEngine.triggerNoteInstant('A', 4, 0.6);
+          }
         }
       ]
     });
@@ -191,21 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const audioEngine = new AudioEngine();
-  const noteWheel = new NoteWheel(mainCanvas);
-
-  // Initialize Songbook Teleprompter
-  const songBookManager = new SongBookManager(songbookDrawer, (selectedChordStr) => {
-    noteWheel.setHighlightedChord(selectedChordStr);
-  });
-  songBookManager.render();
-
-  if (btnToggleSongbookDrawer) {
-    btnToggleSongbookDrawer.addEventListener('click', () => {
-      songbookDrawer.classList.toggle('collapsed');
-    });
-  }
-  
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
   let currentActiveChord = null;
@@ -342,12 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const success = await visionTracker.startCamera();
       updateCameraUIStatus(success);
     }
-  });
-
-  btnTestAudio.addEventListener('click', () => {
-    audioEngine.init();
-    audioEngine.resume();
-    audioEngine.triggerNoteInstant('A', 4, 0.6);
   });
 
   // Acoustic Instrument Selectors (Updates Dynamic Top Label on PillNav!)
