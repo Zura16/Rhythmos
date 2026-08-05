@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rhythmos - Vision Music Player & Teleprompter</title>
-  <meta name="description" content="Rhythmos: Vision-based music player featuring gesture hand tracking, acoustic instruments, lyrics teleprompter, and Web Audio synthesis.">
+  <title>Rhythmos - React Vision Music Player & Teleprompter</title>
+  <meta name="description" content="Rhythmos: React vision-based music player featuring gesture hand tracking, acoustic instruments, lyrics teleprompter, and Web Audio synthesis.">
   
   <link rel="stylesheet" href="./src/style.css">
   
@@ -23,171 +23,8 @@
   <!-- Songbook & Teleprompter Drawer (Left Side) -->
   <aside class="songbook-drawer collapsed" id="songbookDrawer"></aside>
 
-  <!-- Top Header Navigation (Header-03 Component Design) -->
-  <header class="header-navbar">
-    <div class="header-container">
-      
-      <!-- Brand Logo Block -->
-      <div class="nav-brand-block">
-        <a href="#" class="brand-link">
-          <div class="logo-badge">🎵</div>
-          <div class="brand-title">
-            <h1>Rhythmos</h1>
-            <span>A to G# Scale</span>
-          </div>
-        </a>
-      </div>
-
-      <!-- Header-03 Navigation Menu Items -->
-      <nav class="nav-dropdown-group">
-        
-        <!-- Dropdown 1: Acoustic Instrument Selector (Dynamic Top Display) -->
-        <div class="nav-item dropdown">
-          <button class="nav-trigger-btn dropdown-toggle" id="instDropdownTrigger">
-            <span id="currentInstLabel" class="flex items-center gap-2">
-              <span>🪗</span> Harmonium
-            </span>
-            <span class="chevron-icon">▾</span>
-          </button>
-          <div class="dropdown-content-card">
-            <div class="dropdown-header">Select Instrument</div>
-            <ul class="nav-menu-grid">
-              <li>
-                <button class="nav-item-card inst-btn active" data-inst="harmonium">
-                  <div class="card-icon">🪗</div>
-                  <div class="card-text">Harmonium</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="piano">
-                  <div class="card-icon">🎹</div>
-                  <div class="card-text">Grand Piano</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="guitar">
-                  <div class="card-icon">🎸</div>
-                  <div class="card-text">Nylon Guitar</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="strings">
-                  <div class="card-icon">🎻</div>
-                  <div class="card-text">Symphonic Strings</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="marimba">
-                  <div class="card-icon">🪵</div>
-                  <div class="card-text">Concert Marimba</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="rhodes">
-                  <div class="card-icon">⚡</div>
-                  <div class="card-text">Vintage Rhodes</div>
-                </button>
-              </li>
-              <li>
-                <button class="nav-item-card inst-btn" data-inst="organ">
-                  <div class="card-icon">⛪</div>
-                  <div class="card-text">Church Organ</div>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Dropdown 2: Vision & Camera Controls -->
-        <div class="nav-item dropdown">
-          <button class="nav-trigger-btn dropdown-toggle">
-            <span>📹</span> Vision
-            <span class="chevron-icon">▾</span>
-          </button>
-          <div class="dropdown-content-card" style="width: 260px;">
-            <div class="dropdown-header">Camera Control</div>
-            <div class="p-2">
-              <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.75rem;">
-                <span>📹</span> Start Camera
-              </button>
-              <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
-                <span class="badge-dot" id="cameraDot"></span>
-                <span id="cameraStatusText">Camera Off</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dropdown 3: Octave Pitch Range -->
-        <div class="nav-item dropdown">
-          <button class="nav-trigger-btn dropdown-toggle">
-            <span>🎼</span> Octave (<span id="octaveLabel">4</span>)
-            <span class="chevron-icon">▾</span>
-          </button>
-          <div class="dropdown-content-card" style="width: 260px;">
-            <div class="dropdown-header">Octave Pitch Range</div>
-            <div class="p-2">
-              <div class="octave-bar">
-                <button class="oct-btn" data-octave="2">2</button>
-                <button class="oct-btn" data-octave="3">3</button>
-                <button class="oct-btn active" data-octave="4">4</button>
-                <button class="oct-btn" data-octave="5">5</button>
-                <button class="oct-btn" data-octave="6">6</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dropdown 4: Audio Mix & Reverb -->
-        <div class="nav-item dropdown">
-          <button class="nav-trigger-btn dropdown-toggle">
-            <span>🎚️</span> Audio Mix
-            <span class="chevron-icon">▾</span>
-          </button>
-          <div class="dropdown-content-card" style="width: 280px;">
-            <div class="dropdown-header">Master Sound Controls</div>
-            <div class="p-2" style="display: flex; flex-direction: column; gap: 0.85rem;">
-              <div class="control-group">
-                <div class="control-label">
-                  <span>Master Volume</span>
-                  <span id="volVal">85%</span>
-                </div>
-                <input type="range" id="volSlider" min="0" max="100" value="85">
-              </div>
-              <div class="control-group">
-                <div class="control-label">
-                  <span>Concert Reverb</span>
-                  <span id="revVal">35%</span>
-                </div>
-                <input type="range" id="revSlider" min="0" max="100" value="35">
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </nav>
-
-      <!-- Right Header Actions (Songbook & Audio Test & Status) -->
-      <div class="header-actions-group">
-        <!-- Songbook Teleprompter Toggle Button -->
-        <button id="btnToggleSongbookDrawer" class="nav-action-btn songbook-trigger">
-          <span>🎤</span> Songbook Lyrics
-        </button>
-
-        <!-- Quick Audio Test -->
-        <button id="btnTestAudio" class="nav-action-btn">
-          <span>🔔</span> Test Note
-        </button>
-
-        <!-- Audio Status Badge -->
-        <div class="badge" id="audioBadge">
-          <span class="badge-dot" id="audioDot"></span>
-          <span id="audioStatusText">Audio Idle</span>
-        </div>
-      </div>
-
-    </div>
-  </header>
+  <!-- React Header Mount Container -->
+  <div id="reactHeaderRoot"></div>
 
   <!-- Hero Splash Screen with Ferrofluid Background -->
   <div class="modal-backdrop" id="startModal">
@@ -215,6 +52,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/main.jsx"></script>
 </body>
 </html>
