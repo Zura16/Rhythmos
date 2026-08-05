@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
-  let currentActiveChord = null; // { root, quality, index }
+  let currentActiveChord = null; // { root, quality, octaveOffset, index }
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
@@ -92,11 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Helper to compare chords
+  // Helper to compare chord states
   function isSameChord(c1, c2) {
     if (!c1 && !c2) return true;
     if (!c1 || !c2) return false;
-    return c1.root === c2.root && c1.quality === c2.quality;
+    return c1.root === c2.root && c1.quality === c2.quality && c1.octaveOffset === c2.octaveOffset;
   }
 
   // Main Render Frame Loop
@@ -105,11 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!isSameChord(detectedChord, currentActiveChord)) {
       if (currentActiveChord) {
-        audioEngine.stopChord(currentActiveChord.root, currentActiveChord.quality);
+        audioEngine.stopChord(
+          currentActiveChord.root, 
+          currentActiveChord.quality, 
+          audioEngine.octave + currentActiveChord.octaveOffset
+        );
       }
 
       if (detectedChord) {
-        audioEngine.startChord(detectedChord.root, detectedChord.quality);
+        audioEngine.startChord(
+          detectedChord.root, 
+          detectedChord.quality, 
+          audioEngine.octave + detectedChord.octaveOffset
+        );
       }
 
       currentActiveChord = detectedChord;
@@ -120,9 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentActiveChord) {
       waveformData = audioEngine.getWaveformData();
       const qLabel = (currentActiveChord.quality === 'major') ? 'Major' : 'Minor';
+      const actualOctave = audioEngine.octave + currentActiveChord.octaveOffset;
 
       audioDot.classList.add('active');
-      audioStatusText.textContent = `Playing ${currentActiveChord.root} ${qLabel} Chord`;
+      audioStatusText.textContent = `Playing ${currentActiveChord.root} ${qLabel} Chord (Oct ${actualOctave})`;
     } else {
       audioDot.classList.remove('active');
       audioStatusText.textContent = 'Audio Idle';

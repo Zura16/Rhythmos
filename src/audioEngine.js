@@ -1,4 +1,4 @@
-// Professional Acoustic Audio Engine with Polyphonic Major & Minor Chord Synthesis
+// Professional Acoustic Audio Engine with Continuous Ascending Scale Pitch Math & Polyphonic Chord Synthesis
 export class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -14,16 +14,17 @@ export class AudioEngine {
 
     this.volume = 0.85;
     this.reverbLevel = 0.35;
-    this.currentInstrument = 'harmonium'; // 'harmonium', 'piano', 'guitar', 'strings', 'marimba', 'rhodes', 'organ'
+    this.currentInstrument = 'harmonium';
     this.octave = 4;
     
     this.activeVoices = new Map();
-    this.chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     
-    this.semitoneMap = {
-      'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4,
-      'F': 5, 'F#': 6, 'G': 7, 'G#': 8,
-      'A': 9, 'A#': 10, 'B': 11
+    // Continuous Ascending Semitone Mapping starting at A4 = 0 semitones
+    // A=0, A#=1, B=2, C=3, C#=4, D=5, D#=6, E=7, F=8, F#=9, G=10, G#=11
+    this.ascendingSemitoneMap = {
+      'A': 0,  'A#': 1,  'B': 2,
+      'C': 3,  'C#': 4,  'D': 5,  'D#': 6,
+      'E': 7,  'F': 8,   'F#': 9, 'G': 10, 'G#': 11
     };
   }
 
@@ -113,26 +114,14 @@ export class AudioEngine {
   }
 
   getFrequency(noteName, octave = this.octave) {
-    const semitonesFromA4 = {
-      'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
-      'F': -4, 'F#': -3, 'G': -2, 'G#': -1,
-      'A': 0,  'A#': 1,  'B': 2
-    };
-
-    const baseOffset = semitonesFromA4[noteName] || 0;
+    const rootOffset = this.ascendingSemitoneMap[noteName] ?? 0;
     const octaveOffset = (octave - 4) * 12;
-    return this.getFrequencyFromSemitones(baseOffset + octaveOffset);
+    return this.getFrequencyFromSemitones(rootOffset + octaveOffset);
   }
 
-  // Calculate the 3 note frequencies for a Major or Minor chord
+  // Calculate the 3 note frequencies for a Major or Minor chord with continuous pitch scaling
   getChordFrequencies(rootNoteName, quality = 'major', octave = this.octave) {
-    const semitonesFromA4 = {
-      'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
-      'F': -4, 'F#': -3, 'G': -2, 'G#': -1,
-      'A': 0,  'A#': 1,  'B': 2
-    };
-
-    const rootOffset = semitonesFromA4[rootNoteName] || 0;
+    const rootOffset = this.ascendingSemitoneMap[rootNoteName] ?? 0;
     const octaveOffset = (octave - 4) * 12;
     const rootTotal = rootOffset + octaveOffset;
 
@@ -159,7 +148,6 @@ export class AudioEngine {
     
     // Polyphonic Triad Voices (Root, 3rd, 5th)
     const chordVoices = freqs.map((f, idx) => {
-      // Slightly balance gain across triad notes
       const voice = this.createVoice(f, this.currentInstrument);
       if (idx === 1) voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value * 0.85, this.ctx.currentTime);
       if (idx === 2) voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value * 0.8, this.ctx.currentTime);
@@ -223,7 +211,7 @@ export class AudioEngine {
     let releaseTime = 0.4;
 
     if (instrument === 'harmonium') {
-      // Free-Reed Harmonium (Dual Reed Ranks + Octave Coupler + Bellows Modulation)
+      // Free-Reed Harmonium (Dual Reed Ranks + Octave Coupler + Bellows Tremolo)
       const reed1 = this.ctx.createOscillator();
       const reed2 = this.ctx.createOscillator();
       const subReed = this.ctx.createOscillator();
@@ -267,7 +255,7 @@ export class AudioEngine {
       nodes.push(reed1, reed2, subReed, bellowsLfo, bellowsGain, r2Gain, subGain, chamberFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.55, now + 0.05); // Balanced polyphonic chord volume
+      voiceGain.gain.linearRampToValueAtTime(0.55, now + 0.05);
       voiceGain.gain.setValueAtTime(0.45, now + 0.3);
       releaseTime = 0.45;
 

@@ -1,22 +1,26 @@
-// Chromatic Chord Wheel Renderer - Concentric Major & Minor Rings with Light Translucent Glass Grey Styling
+// 24-Sector Single-Circle Chord Wheel with Dynamic Radial Octave Shift & Translucent Light Glass Styling
 export class NoteWheel {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     
-    // 12 Root Notes starting at 12 o'clock (A)
-    this.roots = [
-      'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'
-    ];
+    // 24 Single-Circle Chord Sectors (Major and Minor side-by-side around the full circle)
+    this.roots = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+    
+    this.chords = [];
+    this.roots.forEach(root => {
+      this.chords.push({ root, quality: 'major', label: `${root} Maj` });
+      this.chords.push({ root, quality: 'minor', label: `${root} min` });
+    });
 
-    this.activeChord = null; // { root: string, quality: 'major'|'minor', index: number }
+    this.activeChord = null; // { root, quality, octaveOffset, index }
     
     this.centerX = 0;
     this.centerY = 0;
     this.outerRadius = 0;
     this.midRadius = 0;
     this.innerRadius = 0;
-    this.sectorAngle = (Math.PI * 2) / 12;
+    this.sectorAngle = (Math.PI * 2) / 24; // 15 degrees per slice
 
     this.handConnections = [
       [0,1],[1,2],[2,3],[3,4],
@@ -45,12 +49,12 @@ export class NoteWheel {
     this.centerY = H * 0.54;
     
     const minDim = Math.min(W, H);
-    this.outerRadius = minDim * 0.29;
+    this.outerRadius = minDim * 0.28;
     this.midRadius = minDim * 0.19;
-    this.innerRadius = minDim * 0.09;
+    this.innerRadius = minDim * 0.10;
   }
 
-  draw(cursorPos, screenLandmarks = null, activeWaveformData = null, currentFreq = null) {
+  draw(cursorPos, screenLandmarks = null, activeWaveformData = null) {
     const W = window.innerWidth;
     const H = window.innerHeight;
 
@@ -63,25 +67,19 @@ export class NoteWheel {
       this.drawHandSkeleton(screenLandmarks);
     }
 
-    // 2. Draw 12 Outer Ring Sectors (MAJOR CHORDS)
-    for (let i = 0; i < 12; i++) {
-      const isActive = this.activeChord && this.activeChord.index === i && this.activeChord.quality === 'major';
-      this.drawChordSector(i, 'major', isActive);
+    // 2. Draw 24 Single-Circle Chord Sectors
+    for (let i = 0; i < 24; i++) {
+      const isActive = this.activeChord && this.activeChord.index === i;
+      this.drawSector(i, isActive);
     }
 
-    // 3. Draw 12 Inner Ring Sectors (MINOR CHORDS)
-    for (let i = 0; i < 12; i++) {
-      const isActive = this.activeChord && this.activeChord.index === i && this.activeChord.quality === 'minor';
-      this.drawChordSector(i, 'minor', isActive);
-    }
-
-    // 4. Draw Concentric Accent Rings
+    // 3. Draw Outer & Octave Guidance Rings
     this.drawRings();
 
-    // 5. Draw Center Glass Hub & Audio Waveform Visualizer
+    // 4. Draw Center Glass Hub & Audio Waveform Visualizer
     this.drawCenterHub(activeWaveformData);
 
-    // 6. Draw Clean Finger Target Reticle
+    // 5. Draw Clean Finger Target Reticle
     if (cursorPos && cursorPos.x >= 0 && cursorPos.y >= 0) {
       this.drawCursorOverlay(cursorPos);
     }
@@ -114,24 +112,21 @@ export class NoteWheel {
     this.ctx.restore();
   }
 
-  drawChordSector(index, quality, isActive) {
-    const root = this.roots[index];
+  drawSector(index, isActive) {
+    const chord = this.chords[index];
     const startAngle = -Math.PI / 2 + index * this.sectorAngle - this.sectorAngle / 2;
     const endAngle = startAngle + this.sectorAngle;
-
-    const rOuter = (quality === 'major') ? this.outerRadius : this.midRadius;
-    const rInner = (quality === 'major') ? this.midRadius : this.innerRadius;
 
     this.ctx.save();
     this.ctx.shadowBlur = 0;
 
     this.ctx.beginPath();
-    this.ctx.arc(this.centerX, this.centerY, rOuter, startAngle, endAngle, false);
-    this.ctx.arc(this.centerX, this.centerY, rInner, endAngle, startAngle, true);
+    this.ctx.arc(this.centerX, this.centerY, this.outerRadius, startAngle, endAngle, false);
+    this.ctx.arc(this.centerX, this.centerY, this.innerRadius, endAngle, startAngle, true);
     this.ctx.closePath();
 
     if (isActive) {
-      // Active Chord Hover: Solid Pure White Fill
+      // Active Chord Hover: Solid White Fill
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.fill();
 
@@ -139,10 +134,9 @@ export class NoteWheel {
       this.ctx.strokeStyle = '#0F172A';
       this.ctx.stroke();
     } else {
-      // Light Translucent Glass Grey (allows video to show through!)
-      this.ctx.fillStyle = (quality === 'major') 
-        ? 'rgba(240, 245, 250, 0.42)'  // Outer Major Ring: Light Translucent Glass
-        : 'rgba(215, 222, 230, 0.35)'; // Inner Minor Ring: Soft Slate Translucent Glass
+      // Light Translucent Glass Grey (Major = slightly brighter glass, Minor = soft slate glass)
+      const isMajor = chord.quality === 'major';
+      this.ctx.fillStyle = isMajor ? 'rgba(240, 245, 250, 0.42)' : 'rgba(220, 228, 238, 0.35)';
       this.ctx.fill();
 
       this.ctx.lineWidth = 1.5;
@@ -150,28 +144,24 @@ export class NoteWheel {
       this.ctx.stroke();
     }
 
-    // Label Typography
+    // Sector Label Typography
     const midAngle = startAngle + this.sectorAngle / 2;
-    const labelRadius = (rInner + rOuter) / 2;
+    const labelRadius = (this.innerRadius + this.outerRadius) / 2;
     const labelX = this.centerX + Math.cos(midAngle) * labelRadius;
     const labelY = this.centerY + Math.sin(midAngle) * labelRadius;
 
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
-    const labelText = (quality === 'major') ? `${root} Maj` : `${root} min`;
-
     if (isActive) {
-      this.ctx.font = 'bold 16px "Outfit", sans-serif';
+      this.ctx.font = 'bold 13px "Outfit", sans-serif';
       this.ctx.fillStyle = '#000000';
     } else {
-      this.ctx.font = (quality === 'major') 
-        ? '600 14px "Outfit", sans-serif' 
-        : '500 12px "Outfit", sans-serif';
+      this.ctx.font = (chord.quality === 'major') ? '600 11px "Outfit", sans-serif' : '500 10px "Outfit", sans-serif';
       this.ctx.fillStyle = '#0F172A';
     }
 
-    this.ctx.fillText(labelText, labelX, labelY);
+    this.ctx.fillText(chord.label, labelX, labelY);
 
     this.ctx.restore();
   }
@@ -180,18 +170,19 @@ export class NoteWheel {
     this.ctx.save();
     this.ctx.shadowBlur = 0;
 
-    // Outer Ring Edge
+    // Outer Circle Edge
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.outerRadius + 1, 0, Math.PI * 2);
     this.ctx.lineWidth = 2;
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
     this.ctx.stroke();
 
-    // Divider Ring between Major Outer and Minor Inner
+    // Dotted Mid-Radius Guide Ring for Fast Octave Shift
     this.ctx.beginPath();
+    this.ctx.setLineDash([3, 4]);
     this.ctx.arc(this.centerX, this.centerY, this.midRadius, 0, Math.PI * 2);
-    this.ctx.lineWidth = 1.5;
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
     this.ctx.stroke();
 
     this.ctx.restore();
@@ -204,7 +195,7 @@ export class NoteWheel {
     // Translucent Central Glass Hub
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.innerRadius - 2, 0, Math.PI * 2);
-    this.ctx.fillStyle = 'rgba(241, 245, 249, 0.78)';
+    this.ctx.fillStyle = 'rgba(241, 245, 249, 0.82)';
     this.ctx.fill();
 
     this.ctx.lineWidth = 2;
@@ -238,23 +229,24 @@ export class NoteWheel {
 
     if (this.activeChord) {
       const root = this.activeChord.root;
-      const q = (this.activeChord.quality === 'major') ? 'Major' : 'Minor';
+      const q = (this.activeChord.quality === 'major') ? 'Maj' : 'min';
+      const octShiftTag = (this.activeChord.octaveOffset > 0) ? ' (+1 Oct)' : '';
 
-      this.ctx.font = 'bold 16px "Outfit", sans-serif';
+      this.ctx.font = 'bold 15px "Outfit", sans-serif';
       this.ctx.fillStyle = '#0F172A';
-      this.ctx.fillText(`${root} ${q}`, this.centerX, this.centerY - 4);
+      this.ctx.fillText(`${root} ${q}`, this.centerX, this.centerY - 5);
 
-      this.ctx.font = '10px sans-serif';
+      this.ctx.font = '9px monospace';
       this.ctx.fillStyle = '#334155';
-      this.ctx.fillText('CHORD', this.centerX, this.centerY + 12);
+      this.ctx.fillText(`CHORD${octShiftTag}`, this.centerX, this.centerY + 10);
     } else {
       this.ctx.font = '600 10px "Outfit", sans-serif';
       this.ctx.fillStyle = '#334155';
-      this.ctx.fillText('HOVER CHORD', this.centerX, this.centerY - 5);
+      this.ctx.fillText('HOVER CHORD', this.centerX, this.centerY - 4);
 
-      this.ctx.font = '9px sans-serif';
+      this.ctx.font = '8px sans-serif';
       this.ctx.fillStyle = '#475569';
-      this.ctx.fillText('Outer:Maj / Inner:Min', this.centerX, this.centerY + 9);
+      this.ctx.fillText('Outer = +1 Octave', this.centerX, this.centerY + 9);
     }
 
     this.ctx.restore();
@@ -294,13 +286,18 @@ export class NoteWheel {
     while (angle < 0) angle += Math.PI * 2;
     while (angle >= Math.PI * 2) angle -= Math.PI * 2;
 
-    const sectorIndex = Math.floor(angle / this.sectorAngle) % 12;
-    const root = this.roots[sectorIndex];
+    const sectorIndex = Math.floor(angle / this.sectorAngle) % 24;
+    const chordInfo = this.chords[sectorIndex];
     
-    // Outer Ring = Major Chords; Inner Ring = Minor Chords
-    const quality = (dist >= this.midRadius) ? 'major' : 'minor';
+    // Fast Distance-Based Octave Shift: Outer half of radius shifts pitch up +1 Octave!
+    const octaveOffset = (dist > this.midRadius) ? 1 : 0;
 
-    return { root, quality, index: sectorIndex };
+    return {
+      root: chordInfo.root,
+      quality: chordInfo.quality,
+      octaveOffset: octaveOffset,
+      index: sectorIndex
+    };
   }
 
   triggerRipple(noteIndex) {}
