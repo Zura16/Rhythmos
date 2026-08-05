@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const volSlider = document.getElementById('volSlider');
   const volVal = document.getElementById('volVal');
-  const filterSlider = document.getElementById('filterSlider');
-  const filterVal = document.getElementById('filterVal');
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
   const octaveLabel = document.getElementById('octaveLabel');
@@ -207,14 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
   });
 
-  // Timbre Selectors
-  document.querySelectorAll('.timbre-btn').forEach(btn => {
+  // Acoustic Instrument Selectors
+  document.querySelectorAll('.inst-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.timbre-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
       const target = e.currentTarget;
       target.classList.add('active');
-      const timbre = target.getAttribute('data-timbre');
-      audioEngine.setTimbre(timbre);
+      const inst = target.getAttribute('data-inst');
+      audioEngine.setInstrument(inst);
     });
   });
 
@@ -233,20 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Volume, Filter & Reverb Sliders
+  // Volume & Reverb Sliders
   volSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value, 10);
     volVal.textContent = `${val}%`;
     audioEngine.setVolume(val / 100);
   });
-
-  if (filterSlider) {
-    filterSlider.addEventListener('input', (e) => {
-      const hz = parseInt(e.target.value, 10);
-      filterVal.textContent = hz >= 1000 ? `${(hz / 1000).toFixed(1)} kHz` : `${hz} Hz`;
-      audioEngine.setFilterCutoff(hz);
-    });
-  }
 
   revSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value, 10);

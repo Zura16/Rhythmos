@@ -174,14 +174,14 @@ body {
   margin-bottom: 0.25rem;
 }
 
-/* Controls Components */
+/* Instrument Selection List */
 .timbre-list {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.timbre-btn {
+.inst-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-neutral);
   color: var(--text-main);
@@ -193,11 +193,11 @@ body {
   cursor: pointer;
 }
 
-.timbre-btn:hover {
+.inst-btn:hover {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.timbre-btn.active {
+.inst-btn.active {
   background: #FFFFFF;
   color: var(--text-dark);
   font-weight: 700;
