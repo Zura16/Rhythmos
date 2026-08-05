@@ -1,17 +1,16 @@
 import { AudioEngine } from './audioEngine.js';
 import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
-import { Topography } from './Topography.js';
-import { PillNav } from './PillNav.js';
+import { Ferrofluid } from './ferrofluid.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
   const webcamVideo = document.getElementById('webcamVideo');
-  const topographyContainer = document.getElementById('topographyContainer');
-  const pillNavContainer = document.getElementById('pillNavContainer');
 
   const btnStartApp = document.getElementById('btnStartApp');
   const startModal = document.getElementById('startModal');
+  const ferrofluidContainer = document.getElementById('ferrofluidContainer');
+  
   const btnToggleCamera = document.getElementById('btnToggleCamera');
   const btnTestAudio = document.getElementById('btnTestAudio');
 
@@ -24,70 +23,44 @@ document.addEventListener('DOMContentLoaded', () => {
   const volVal = document.getElementById('volVal');
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
+  const octaveLabel = document.getElementById('octaveLabel');
 
-  // 1. Core Engines Initialization
+  // Initialize Ferrofluid background on welcome modal
+  let ferrofluid = null;
+  if (ferrofluidContainer) {
+    try {
+      ferrofluid = new Ferrofluid(ferrofluidContainer, {
+        colors: ["#ffffff", "#ffffff", "#ffffff"],
+        speed: 0.5,
+        scale: 1,
+        turbulence: 1,
+        fluidity: 0.1,
+        rimWidth: 0.2,
+        sharpness: 3,
+        shimmer: 1,
+        glow: 2,
+        flowDirection: "down",
+        opacity: 1,
+        mouseInteraction: true,
+        mouseStrength: 1,
+        mouseRadius: 0.3
+      });
+    } catch (err) {
+      console.warn('Ferrofluid WebGL initialization fallback:', err);
+    }
+  }
+
   const audioEngine = new AudioEngine();
   const noteWheel = new NoteWheel(mainCanvas);
-
-  // Force layout resize calculation immediately
-  noteWheel.resize();
-  window.addEventListener('load', () => noteWheel.resize());
-
-  // 2. React Bits <PillNav /> Component Initialization
-  let pillNav = null;
-  if (pillNavContainer) {
-    try {
-      pillNav = new PillNav(pillNavContainer, {
-        ease: 'power3.easeOut',
-        baseColor: '#0F172A',
-        pillColor: '#E2E8F0',
-        hoveredPillTextColor: '#FFFFFF',
-        pillTextColor: '#0F172A',
-        initialLoadAnimation: true
-      });
-    } catch (e) {
-      console.warn('PillNav notice:', e);
-    }
-  }
-
-  // 3. React Bits <Topography /> Component Initialization
-  let topography = null;
-  if (topographyContainer) {
-    try {
-      topography = new Topography(topographyContainer, {
-        lowColor: '#1E293B',
-        midColor: '#64748B',
-        highColor: '#CBD5E1',
-        speed: 0.25,
-        morphAmount: 2.5,
-        morphSpeed: 0.04,
-        bands: 2.5,
-        thickness: 0.012,
-        scale: 1.0,
-        glow: 0.3,
-        opacity: 0.55,
-        mouseInteraction: true,
-        mouseRadius: 0.3,
-        mouseStrength: 0.4
-      });
-    } catch (e) {
-      console.warn('Topography notice:', e);
-    }
-  }
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
   let currentActiveNoteIndex = -1;
-  let isLoopRunning = false;
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
       latestCursorPos = handPos;
       latestLandmarks = landmarks;
-
-      if (topography && handPos.x >= 0 && handPos.y >= 0) {
-        topography.updateCursorPos(handPos.x, handPos.y);
-      }
     } else if (latestCursorPos.isCamera) {
       latestCursorPos = { x: -1, y: -1, isCamera: false };
       latestLandmarks = null;
@@ -105,10 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
       isCamera: false
     };
     latestLandmarks = null;
-
-    if (topography) {
-      topography.updateCursorPos(clientX, clientY);
-    }
   }
 
   window.addEventListener('mousemove', updatePointerPos);
@@ -122,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Main Canvas Render Loop
+  // Main Render Frame Loop
   function renderLoop() {
     const detectedNoteIndex = noteWheel.getNoteAtPosition(latestCursorPos);
 
@@ -161,35 +130,24 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(renderLoop);
   }
 
-  function startRenderLoop() {
-    if (!isLoopRunning) {
-      isLoopRunning = true;
-      renderLoop();
-    }
-  }
-
-  // App Start Handler
-  function initApp() {
-    if (startModal) {
-      startModal.style.display = 'none';
-      startModal.classList.add('hidden');
-    }
-
-    try {
-      audioEngine.init();
-      audioEngine.resume();
-    } catch (e) {
-      console.warn('AudioContext resume notice:', e);
+  // App Init Callback
+  async function initApp() {
+    audioEngine.init();
+    audioEngine.resume();
+    
+    // Hide Modal & cleanup Ferrofluid instance
+    startModal.classList.add('hidden');
+    if (ferrofluid) {
+      setTimeout(() => {
+        ferrofluid.destroy();
+        ferrofluid = null;
+      }, 500);
     }
 
-    visionTracker.startCamera().then(cameraSuccess => {
-      updateCameraUIStatus(cameraSuccess);
-    }).catch(err => {
-      console.warn('Camera start notice:', err);
-      updateCameraUIStatus(false);
-    });
+    const cameraSuccess = await visionTracker.startCamera();
+    updateCameraUIStatus(cameraSuccess);
 
-    startRenderLoop();
+    renderLoop();
   }
 
   function updateCameraUIStatus(active) {
@@ -208,40 +166,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (btnStartApp) {
-    btnStartApp.addEventListener('click', initApp);
-  }
+  btnStartApp.addEventListener('click', initApp);
 
-  if (btnToggleCamera) {
-    btnToggleCamera.addEventListener('click', async () => {
-      audioEngine.init();
-      audioEngine.resume();
+  btnToggleCamera.addEventListener('click', async () => {
+    audioEngine.init();
+    audioEngine.resume();
 
-      if (visionTracker.isRunning) {
-        visionTracker.stopCamera();
-        updateCameraUIStatus(false);
-      } else {
-        const success = await visionTracker.startCamera();
-        updateCameraUIStatus(success);
-      }
-    });
-  }
+    if (visionTracker.isRunning) {
+      visionTracker.stopCamera();
+      updateCameraUIStatus(false);
+    } else {
+      const success = await visionTracker.startCamera();
+      updateCameraUIStatus(success);
+    }
+  });
 
-  if (btnTestAudio) {
-    btnTestAudio.addEventListener('click', () => {
-      audioEngine.init();
-      audioEngine.resume();
-      audioEngine.triggerNoteInstant('A', 4, 0.6);
-      noteWheel.triggerRipple(0);
-    });
-  }
+  btnTestAudio.addEventListener('click', () => {
+    audioEngine.init();
+    audioEngine.resume();
+    audioEngine.triggerNoteInstant('A', 4, 0.6);
+    noteWheel.triggerRipple(0);
+  });
 
-  // Pill Nav Dropdown Toggle Click Event Listeners
+  // Dropdown Toggle Handlers
   document.querySelectorAll('.dropdown-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const parent = btn.closest('.pill-item');
-      document.querySelectorAll('.pill-item').forEach(item => {
+      const parent = btn.closest('.nav-item');
+      document.querySelectorAll('.nav-item').forEach(item => {
         if (item !== parent) item.classList.remove('open');
       });
       parent.classList.toggle('open');
@@ -249,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', () => {
-    document.querySelectorAll('.pill-item').forEach(item => item.classList.remove('open'));
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
   });
 
   // Timbre Selectors
@@ -259,18 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = e.currentTarget;
       target.classList.add('active');
       const timbre = target.getAttribute('data-timbre');
-      
       audioEngine.setTimbre(timbre);
-      audioEngine.stopAllNotes();
-      
-      const prevActiveIndex = currentActiveNoteIndex;
-      currentActiveNoteIndex = -1;
-
-      if (prevActiveIndex >= 0) {
-        const activeNote = noteWheel.notes[prevActiveIndex];
-        audioEngine.startNote(activeNote.name);
-        currentActiveNoteIndex = prevActiveIndex;
-      }
     });
   });
 
@@ -282,10 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
       target.classList.add('active');
       const oct = parseInt(target.getAttribute('data-octave'), 10);
       audioEngine.setOctave(oct);
-      
-      document.querySelectorAll('.octaveLabel').forEach(lbl => {
-        lbl.textContent = oct;
-      });
+      octaveLabel.textContent = oct;
 
       audioEngine.stopAllNotes();
       currentActiveNoteIndex = -1;
@@ -293,40 +231,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Volume & Reverb Sliders
-  if (volSlider) {
-    volSlider.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      if (volVal) volVal.textContent = `${val}%`;
-      audioEngine.setVolume(val / 100);
-    });
-  }
+  volSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    volVal.textContent = `${val}%`;
+    audioEngine.setVolume(val / 100);
+  });
 
-  if (revSlider) {
-    revSlider.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10);
-      if (revVal) revVal.textContent = `${val}%`;
-      audioEngine.setReverb(val / 100);
-    });
-  }
-
-  // Mobile menu buttons
-  const mobileCameraBtn = document.getElementById('mobileCameraBtn');
-  const mobileTestBtn = document.getElementById('mobileTestBtn');
-
-  if (mobileCameraBtn) {
-    mobileCameraBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      btnToggleCamera.click();
-    });
-  }
-
-  if (mobileTestBtn) {
-    mobileTestBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      btnTestAudio.click();
-    });
-  }
-
-  // Start initial render loop immediately
-  startRenderLoop();
+  revSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    revVal.textContent = `${val}%`;
+    audioEngine.setReverb(val / 100);
+  });
 });
