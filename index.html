@@ -23,7 +23,7 @@
   <!-- Songbook & Teleprompter Drawer (Left Side) -->
   <aside class="songbook-drawer collapsed" id="songbookDrawer"></aside>
 
-  <!-- Top Navigation Header Bar -->
+  <!-- Top Header Navigation (Header-03 Component Design) -->
   <header class="header-navbar">
     <div class="header-container">
       
@@ -38,10 +38,10 @@
         </a>
       </div>
 
-      <!-- Navigation Dropdown Items -->
+      <!-- Header-03 Navigation Menu Items -->
       <nav class="nav-dropdown-group">
         
-        <!-- Dropdown 1: Acoustic Instrument Selector (Shows Selected Instrument at Top!) -->
+        <!-- Dropdown 1: Acoustic Instrument Selector (Dynamic Top Display) -->
         <div class="nav-item dropdown">
           <button class="nav-trigger-btn dropdown-toggle" id="instDropdownTrigger">
             <span id="currentInstLabel" class="flex items-center gap-2">
@@ -49,66 +49,91 @@
             </span>
             <span class="chevron-icon">▾</span>
           </button>
-          <div class="dropdown-menu inst-dropdown-menu">
+          <div class="dropdown-content-card">
             <div class="dropdown-header">Select Instrument</div>
-            <div class="timbre-list">
-              <button class="inst-btn active" data-inst="harmonium">
-                <span>🪗</span> Harmonium
-              </button>
-              <button class="inst-btn" data-inst="piano">
-                <span>🎹</span> Grand Piano
-              </button>
-              <button class="inst-btn" data-inst="guitar">
-                <span>🎸</span> Nylon Guitar
-              </button>
-              <button class="inst-btn" data-inst="strings">
-                <span>🎻</span> Symphonic Strings
-              </button>
-              <button class="inst-btn" data-inst="marimba">
-                <span>🪵</span> Concert Marimba
-              </button>
-              <button class="inst-btn" data-inst="rhodes">
-                <span>⚡</span> Vintage Rhodes
-              </button>
-              <button class="inst-btn" data-inst="organ">
-                <span>⛪</span> Church Organ
-              </button>
-            </div>
+            <ul class="nav-menu-grid">
+              <li>
+                <button class="nav-item-card inst-btn active" data-inst="harmonium">
+                  <div class="card-icon">🪗</div>
+                  <div class="card-text">Harmonium</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="piano">
+                  <div class="card-icon">🎹</div>
+                  <div class="card-text">Grand Piano</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="guitar">
+                  <div class="card-icon">🎸</div>
+                  <div class="card-text">Nylon Guitar</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="strings">
+                  <div class="card-icon">🎻</div>
+                  <div class="card-text">Symphonic Strings</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="marimba">
+                  <div class="card-icon">🪵</div>
+                  <div class="card-text">Concert Marimba</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="rhodes">
+                  <div class="card-icon">⚡</div>
+                  <div class="card-text">Vintage Rhodes</div>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-card inst-btn" data-inst="organ">
+                  <div class="card-icon">⛪</div>
+                  <div class="card-text">Church Organ</div>
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <!-- Dropdown 2: Camera & Vision Controls -->
+        <!-- Dropdown 2: Vision & Camera Controls -->
         <div class="nav-item dropdown">
           <button class="nav-trigger-btn dropdown-toggle">
             <span>📹</span> Vision
             <span class="chevron-icon">▾</span>
           </button>
-          <div class="dropdown-menu">
+          <div class="dropdown-content-card" style="width: 260px;">
             <div class="dropdown-header">Camera Control</div>
-            <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.5rem;">
-              <span>📹</span> Start Camera
-            </button>
-            <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
-              <span class="badge-dot" id="cameraDot"></span>
-              <span id="cameraStatusText">Camera Off</span>
+            <div class="p-2">
+              <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.75rem;">
+                <span>📹</span> Start Camera
+              </button>
+              <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
+                <span class="badge-dot" id="cameraDot"></span>
+                <span id="cameraStatusText">Camera Off</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Dropdown 3: Octave Range -->
+        <!-- Dropdown 3: Octave Pitch Range -->
         <div class="nav-item dropdown">
           <button class="nav-trigger-btn dropdown-toggle">
             <span>🎼</span> Octave (<span id="octaveLabel">4</span>)
             <span class="chevron-icon">▾</span>
           </button>
-          <div class="dropdown-menu">
+          <div class="dropdown-content-card" style="width: 260px;">
             <div class="dropdown-header">Octave Pitch Range</div>
-            <div class="octave-bar">
-              <button class="oct-btn" data-octave="2">2</button>
-              <button class="oct-btn" data-octave="3">3</button>
-              <button class="oct-btn active" data-octave="4">4</button>
-              <button class="oct-btn" data-octave="5">5</button>
-              <button class="oct-btn" data-octave="6">6</button>
+            <div class="p-2">
+              <div class="octave-bar">
+                <button class="oct-btn" data-octave="2">2</button>
+                <button class="oct-btn" data-octave="3">3</button>
+                <button class="oct-btn active" data-octave="4">4</button>
+                <button class="oct-btn" data-octave="5">5</button>
+                <button class="oct-btn" data-octave="6">6</button>
+              </div>
             </div>
           </div>
         </div>
@@ -119,27 +144,30 @@
             <span>🎚️</span> Audio Mix
             <span class="chevron-icon">▾</span>
           </button>
-          <div class="dropdown-menu" style="min-width: 220px;">
-            <div class="control-group">
-              <div class="control-label">
-                <span>Master Volume</span>
-                <span id="volVal">85%</span>
+          <div class="dropdown-content-card" style="width: 280px;">
+            <div class="dropdown-header">Master Sound Controls</div>
+            <div class="p-2" style="display: flex; flex-direction: column; gap: 0.85rem;">
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Master Volume</span>
+                  <span id="volVal">85%</span>
+                </div>
+                <input type="range" id="volSlider" min="0" max="100" value="85">
               </div>
-              <input type="range" id="volSlider" min="0" max="100" value="85">
-            </div>
-            <div class="control-group" style="margin-top: 0.75rem;">
-              <div class="control-label">
-                <span>Concert Reverb</span>
-                <span id="revVal">35%</span>
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Concert Reverb</span>
+                  <span id="revVal">35%</span>
+                </div>
+                <input type="range" id="revSlider" min="0" max="100" value="35">
               </div>
-              <input type="range" id="revSlider" min="0" max="100" value="35">
             </div>
           </div>
         </div>
 
       </nav>
 
-      <!-- Right Header Actions (Songbook & Audio Test) -->
+      <!-- Right Header Actions (Songbook & Audio Test & Status) -->
       <div class="header-actions-group">
         <!-- Songbook Teleprompter Toggle Button -->
         <button id="btnToggleSongbookDrawer" class="nav-action-btn songbook-trigger">
@@ -150,6 +178,12 @@
         <button id="btnTestAudio" class="nav-action-btn">
           <span>🔔</span> Test Note
         </button>
+
+        <!-- Audio Status Badge -->
+        <div class="badge" id="audioBadge">
+          <span class="badge-dot" id="audioDot"></span>
+          <span id="audioStatusText">Audio Idle</span>
+        </div>
       </div>
 
     </div>
