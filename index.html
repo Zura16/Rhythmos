@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rhythmos - Vision Gesture Music Player</title>
-  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, Topography background, and Web Audio synthesis.">
+  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, PillNav component, and Web Audio synthesis.">
   
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/Topography.css">
+  <link rel="stylesheet" href="./src/PillNav.css">
   
   <!-- MediaPipe Hands & Camera Utils CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -25,105 +26,141 @@
     <canvas id="mainCanvas"></canvas>
   </div>
 
-  <!-- Top Dropdown Navigation Menu Bar -->
-  <header class="top-navbar">
-    <div class="nav-brand">
-      <div class="logo-icon">🎵</div>
-      <div class="brand-text">
-        <h1>Rhythmos</h1>
-        <p>A to G# Scale</p>
-      </div>
-    </div>
+  <!-- React Bits <PillNav /> Navigation Header -->
+  <div class="pill-nav-container" id="pillNavContainer">
+    <nav class="pill-nav" aria-label="Primary">
+      <!-- Logo Pill Button -->
+      <a class="pill-logo" href="#" aria-label="Rhythmos Home">
+        <div class="pill-logo-icon">🎵</div>
+      </a>
 
-    <!-- Dropdown Menu Item 1: Camera Controls -->
-    <div class="nav-item dropdown">
-      <button class="nav-btn dropdown-toggle">
-        <span>📹</span> Vision <span class="arrow">▾</span>
+      <!-- Desktop Pill List -->
+      <div class="pill-nav-items desktop-only">
+        <ul class="pill-list" role="menubar">
+          
+          <!-- Pill 1: Vision Camera Control -->
+          <li class="pill-item">
+            <button class="pill dropdown-toggle" aria-label="Vision Controls">
+              <span class="hover-circle" aria-hidden="true"></span>
+              <span class="label-stack">
+                <span class="pill-label">📹 Vision</span>
+                <span class="pill-label-hover" aria-hidden="true">📹 Vision</span>
+              </span>
+            </button>
+            <div class="pill-dropdown-popover">
+              <div class="dropdown-header">Camera Control</div>
+              <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.5rem;">
+                <span>📹</span> Start Camera
+              </button>
+              <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
+                <span class="badge-dot" id="cameraDot"></span>
+                <span id="cameraStatusText">Camera Off</span>
+              </div>
+            </div>
+          </li>
+
+          <!-- Pill 2: Instrument Selection -->
+          <li class="pill-item">
+            <button class="pill dropdown-toggle" aria-label="Select Instrument">
+              <span class="hover-circle" aria-hidden="true"></span>
+              <span class="label-stack">
+                <span class="pill-label">🎹 Instrument</span>
+                <span class="pill-label-hover" aria-hidden="true">🎹 Instrument</span>
+              </span>
+            </button>
+            <div class="pill-dropdown-popover" style="min-width: 210px;">
+              <div class="dropdown-header">Select Instrument</div>
+              <div class="timbre-list">
+                <button class="timbre-btn active" data-timbre="piano">🎹 Acoustic Piano</button>
+                <button class="timbre-btn" data-timbre="guitar">🎸 Plucked Guitar</button>
+                <button class="timbre-btn" data-timbre="brass">🎷 Brass Lead</button>
+                <button class="timbre-btn" data-timbre="strings">🎻 String Ensemble</button>
+                <button class="timbre-btn" data-timbre="chime">🔔 Crystal Chime</button>
+                <button class="timbre-btn" data-timbre="marimba">🪵 Acoustic Marimba</button>
+                <button class="timbre-btn" data-timbre="pad">🌌 Cosmic Pad</button>
+                <button class="timbre-btn" data-timbre="retro">👾 8-Bit Retro</button>
+                <button class="timbre-btn" data-timbre="synth">🎹 Grand Synth</button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Pill 3: Octave Selection -->
+          <li class="pill-item">
+            <button class="pill dropdown-toggle" aria-label="Select Octave">
+              <span class="hover-circle" aria-hidden="true"></span>
+              <span class="label-stack">
+                <span class="pill-label">🎼 Octave (<span class="octaveLabel">4</span>)</span>
+                <span class="pill-label-hover" aria-hidden="true">🎼 Octave (<span class="octaveLabel">4</span>)</span>
+              </span>
+            </button>
+            <div class="pill-dropdown-popover">
+              <div class="dropdown-header">Octave Pitch Range</div>
+              <div class="octave-bar">
+                <button class="oct-btn" data-octave="2">2</button>
+                <button class="oct-btn" data-octave="3">3</button>
+                <button class="oct-btn active" data-octave="4">4</button>
+                <button class="oct-btn" data-octave="5">5</button>
+                <button class="oct-btn" data-octave="6">6</button>
+              </div>
+            </div>
+          </li>
+
+          <!-- Pill 4: Audio Mix & Sliders -->
+          <li class="pill-item">
+            <button class="pill dropdown-toggle" aria-label="Audio Controls">
+              <span class="hover-circle" aria-hidden="true"></span>
+              <span class="label-stack">
+                <span class="pill-label">🎚️ Audio Mix</span>
+                <span class="pill-label-hover" aria-hidden="true">🎚️ Audio Mix</span>
+              </span>
+            </button>
+            <div class="pill-dropdown-popover" style="min-width: 220px;">
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Master Volume</span>
+                  <span id="volVal">80%</span>
+                </div>
+                <input type="range" id="volSlider" min="0" max="100" value="80">
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <div class="control-label">
+                  <span>Space Reverb</span>
+                  <span id="revVal">30%</span>
+                </div>
+                <input type="range" id="revSlider" min="0" max="100" value="30">
+              </div>
+            </div>
+          </li>
+
+          <!-- Pill 5: Quick Test -->
+          <li class="pill-item">
+            <button class="pill" id="btnTestAudio" aria-label="Test Note">
+              <span class="hover-circle" aria-hidden="true"></span>
+              <span class="label-stack">
+                <span class="pill-label">🔔 Test Note</span>
+                <span class="pill-label-hover" aria-hidden="true">🔔 Test Note</span>
+              </span>
+            </button>
+          </li>
+
+        </ul>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="mobile-menu-button mobile-only" aria-label="Toggle menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
       </button>
-      <div class="dropdown-menu">
-        <div class="dropdown-header">Camera Control</div>
-        <button id="btnToggleCamera" class="btn-primary" style="margin-bottom: 0.5rem;">
-          <span>📹</span> Start Camera
-        </button>
-        <div class="badge" id="cameraBadge" style="width: 100%; justify-content: center;">
-          <span class="badge-dot" id="cameraDot"></span>
-          <span id="cameraStatusText">Camera Off</span>
-        </div>
-      </div>
-    </div>
+    </nav>
 
-    <!-- Dropdown Menu Item 2: Expanded Instrument Selection -->
-    <div class="nav-item dropdown">
-      <button class="nav-btn dropdown-toggle">
-        <span>🎹</span> Instrument <span class="arrow">▾</span>
-      </button>
-      <div class="dropdown-menu" style="min-width: 210px;">
-        <div class="dropdown-header">Select Instrument</div>
-        <div class="timbre-list">
-          <button class="timbre-btn active" data-timbre="piano">🎹 Acoustic Piano</button>
-          <button class="timbre-btn" data-timbre="guitar">🎸 Plucked Guitar</button>
-          <button class="timbre-btn" data-timbre="brass">🎷 Brass Lead</button>
-          <button class="timbre-btn" data-timbre="strings">🎻 String Ensemble</button>
-          <button class="timbre-btn" data-timbre="chime">🔔 Crystal Chime</button>
-          <button class="timbre-btn" data-timbre="marimba">🪵 Acoustic Marimba</button>
-          <button class="timbre-btn" data-timbre="pad">🌌 Cosmic Pad</button>
-          <button class="timbre-btn" data-timbre="retro">👾 8-Bit Retro</button>
-          <button class="timbre-btn" data-timbre="synth">🎹 Grand Synth</button>
-        </div>
-      </div>
+    <!-- Mobile Popover -->
+    <div class="mobile-menu-popover mobile-only">
+      <ul class="mobile-menu-list">
+        <li><a class="mobile-menu-link" href="#" id="mobileCameraBtn">📹 Toggle Camera</a></li>
+        <li><a class="mobile-menu-link" href="#" id="mobileTestBtn">🔔 Test Note</a></li>
+      </ul>
     </div>
-
-    <!-- Dropdown Menu Item 3: Octave Selection -->
-    <div class="nav-item dropdown">
-      <button class="nav-btn dropdown-toggle">
-        <span>🎼</span> Octave (<span id="octaveLabel">4</span>) <span class="arrow">▾</span>
-      </button>
-      <div class="dropdown-menu">
-        <div class="dropdown-header">Octave Pitch Range</div>
-        <div class="octave-bar">
-          <button class="oct-btn" data-octave="2">2</button>
-          <button class="oct-btn" data-octave="3">3</button>
-          <button class="oct-btn active" data-octave="4">4</button>
-          <button class="oct-btn" data-octave="5">5</button>
-          <button class="oct-btn" data-octave="6">6</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dropdown Menu Item 4: Audio Mix & Sliders -->
-    <div class="nav-item dropdown">
-      <button class="nav-btn dropdown-toggle">
-        <span>🎚️</span> Audio Mix <span class="arrow">▾</span>
-      </button>
-      <div class="dropdown-menu" style="min-width: 220px;">
-        <div class="control-group">
-          <div class="control-label">
-            <span>Master Volume</span>
-            <span id="volVal">80%</span>
-          </div>
-          <input type="range" id="volSlider" min="0" max="100" value="80">
-        </div>
-        <div class="control-group" style="margin-top: 0.75rem;">
-          <div class="control-label">
-            <span>Space Reverb</span>
-            <span id="revVal">30%</span>
-          </div>
-          <input type="range" id="revSlider" min="0" max="100" value="30">
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Audio Test -->
-    <button id="btnTestAudio" class="nav-btn-action">
-      <span>🔔</span> Test Note
-    </button>
-
-    <!-- Audio Status Indicator -->
-    <div class="badge" id="audioBadge" style="margin-left: auto;">
-      <span class="badge-dot" id="audioDot"></span>
-      <span id="audioStatusText">Audio Idle</span>
-    </div>
-  </header>
+  </div>
 
   <!-- Autoplay / Camera Start Splash Modal -->
   <div class="modal-backdrop" id="startModal">
@@ -137,7 +174,7 @@
       </button>
       
       <p style="font-size: 0.75rem; opacity: 0.7;">
-        Top menu bar contains dropdown settings for camera, instruments, octaves, and volume.
+        Use the PillNav header controls to switch instruments, octaves, volume, and camera.
       </p>
     </div>
   </div>

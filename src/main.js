@@ -2,11 +2,13 @@ import { AudioEngine } from './audioEngine.js';
 import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
 import { Topography } from './Topography.js';
+import { PillNav } from './PillNav.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
   const webcamVideo = document.getElementById('webcamVideo');
   const topographyContainer = document.getElementById('topographyContainer');
+  const pillNavContainer = document.getElementById('pillNavContainer');
 
   const btnStartApp = document.getElementById('btnStartApp');
   const startModal = document.getElementById('startModal');
@@ -22,13 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const volVal = document.getElementById('volVal');
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
-  const octaveLabel = document.getElementById('octaveLabel');
 
   // 1. Core Engines Initialization
   const audioEngine = new AudioEngine();
   const noteWheel = new NoteWheel(mainCanvas);
 
-  // 2. React Bits <Topography /> Component Integration
+  // 2. React Bits <PillNav /> Component Initialization
+  let pillNav = null;
+  if (pillNavContainer) {
+    pillNav = new PillNav(pillNavContainer, {
+      ease: 'power3.easeOut',
+      baseColor: '#0F172A',
+      pillColor: '#E2E8F0',
+      hoveredPillTextColor: '#FFFFFF',
+      pillTextColor: '#0F172A',
+      initialLoadAnimation: true
+    });
+  }
+
+  // 3. React Bits <Topography /> Component Initialization
   let topography = null;
   if (topographyContainer) {
     topography = new Topography(topographyContainer, {
@@ -58,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
       latestCursorPos = handPos;
       latestLandmarks = landmarks;
 
-      // Update Topography cursor interaction with finger tracking
       if (topography && handPos.x >= 0 && handPos.y >= 0) {
         topography.updateCursorPos(handPos.x, handPos.y);
       }
@@ -185,12 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
     noteWheel.triggerRipple(0);
   });
 
-  // Dropdown Toggle Click Event Listeners
+  // Pill Nav Dropdown Toggle Click Event Listeners
   document.querySelectorAll('.dropdown-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const parent = btn.closest('.nav-item');
-      document.querySelectorAll('.nav-item').forEach(item => {
+      const parent = btn.closest('.pill-item');
+      document.querySelectorAll('.pill-item').forEach(item => {
         if (item !== parent) item.classList.remove('open');
       });
       parent.classList.toggle('open');
@@ -198,10 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
+    document.querySelectorAll('.pill-item').forEach(item => item.classList.remove('open'));
   });
 
-  // Timbre Selectors - FIX: INSTANT SOUND SWITCHING UPON SELECTION!
+  // Timbre Selectors
   document.querySelectorAll('.timbre-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.timbre-btn').forEach(b => b.classList.remove('active'));
@@ -209,11 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
       target.classList.add('active');
       const timbre = target.getAttribute('data-timbre');
       
-      // Stop active voices & update engine timbre
       audioEngine.setTimbre(timbre);
       audioEngine.stopAllNotes();
       
-      // Re-trigger current note if hovering
       const prevActiveIndex = currentActiveNoteIndex;
       currentActiveNoteIndex = -1;
 
@@ -233,7 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
       target.classList.add('active');
       const oct = parseInt(target.getAttribute('data-octave'), 10);
       audioEngine.setOctave(oct);
-      octaveLabel.textContent = oct;
+      
+      document.querySelectorAll('.octaveLabel').forEach(lbl => {
+        lbl.textContent = oct;
+      });
 
       audioEngine.stopAllNotes();
       currentActiveNoteIndex = -1;
@@ -252,4 +266,22 @@ document.addEventListener('DOMContentLoaded', () => {
     revVal.textContent = `${val}%`;
     audioEngine.setReverb(val / 100);
   });
+
+  // Mobile menu buttons
+  const mobileCameraBtn = document.getElementById('mobileCameraBtn');
+  const mobileTestBtn = document.getElementById('mobileTestBtn');
+
+  if (mobileCameraBtn) {
+    mobileCameraBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      btnToggleCamera.click();
+    });
+  }
+
+  if (mobileTestBtn) {
+    mobileTestBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      btnTestAudio.click();
+    });
+  }
 });
