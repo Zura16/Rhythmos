@@ -1,23 +1,23 @@
-// Chromatic Note Wheel Renderer - High-Contrast Visible Note Wheel
+// Chromatic Note Wheel Renderer - 100% High Visibility Note Wheel
 export class NoteWheel {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     
-    // 12 Chromatic Notes (A to G#)
+    // 12 Chromatic Notes (A to G#) starting at 12 o'clock
     this.notes = [
-      { name: 'A' },
-      { name: 'A#' },
-      { name: 'B' },
-      { name: 'C' },
-      { name: 'C#' },
-      { name: 'D' },
-      { name: 'D#' },
-      { name: 'E' },
-      { name: 'F' },
-      { name: 'F#' },
-      { name: 'G' },
-      { name: 'G#' }
+      { name: 'A',  color: '#FF2D55' },
+      { name: 'A#', color: '#9C27B0' },
+      { name: 'B',  color: '#673AB7' },
+      { name: 'C',  color: '#00E5FF' },
+      { name: 'C#', color: '#00897B' },
+      { name: 'D',  color: '#00E676' },
+      { name: 'D#', color: '#2E7D32' },
+      { name: 'E',  color: '#AEEA00' },
+      { name: 'F',  color: '#FFD600' },
+      { name: 'F#', color: '#FF6D00' },
+      { name: 'G',  color: '#FF3D00' },
+      { name: 'G#', color: '#C2185B' }
     ];
 
     this.activeNoteIndex = -1;
@@ -41,40 +41,44 @@ export class NoteWheel {
   }
 
   resize() {
-    const W = window.innerWidth;
-    const H = window.innerHeight;
+    const W = window.innerWidth || 1280;
+    const H = window.innerHeight || 720;
     const dpr = window.devicePixelRatio || 1;
 
-    this.canvas.width = W * dpr;
-    this.canvas.height = H * dpr;
+    // Explicitly set element CSS dimensions AND buffer dimensions
+    this.canvas.style.width = `${W}px`;
+    this.canvas.style.height = `${H}px`;
+    this.canvas.width = Math.floor(W * dpr);
+    this.canvas.height = Math.floor(H * dpr);
 
-    this.centerX = W * 0.72;
-    this.centerY = H * 0.54;
+    // Position wheel centered-right for optimum visibility
+    this.centerX = W * 0.62;
+    this.centerY = H * 0.52;
     
     const minDim = Math.min(W, H);
-    this.outerRadius = minDim * 0.26;
-    this.innerRadius = minDim * 0.10;
+    this.outerRadius = Math.max(160, minDim * 0.32);
+    this.innerRadius = Math.max(60, minDim * 0.12);
   }
 
   draw(cursorPos, screenLandmarks = null, activeWaveformData = null, currentFreq = null) {
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-
-    // Reset transform & scale for retina screens
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const W = window.innerWidth || 1280;
+    const H = window.innerHeight || 720;
     const dpr = window.devicePixelRatio || 1;
+
+    // Set DPR scale on every frame
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
 
     this.ctx.clearRect(0, 0, W, H);
 
     this.activeNoteIndex = this.getNoteAtPosition(cursorPos);
 
-    // 1. Draw Clean Hand Skeleton
+    // 1. Draw Hand Skeleton Overlay
     if (screenLandmarks && screenLandmarks.length > 0) {
       this.drawHandSkeleton(screenLandmarks);
     }
 
-    // 2. Draw 12 High-Contrast Note Sectors
+    // 2. Draw 12 High-Visibility Note Sectors
     for (let i = 0; i < 12; i++) {
       this.drawSector(i, i === this.activeNoteIndex);
     }
@@ -82,7 +86,7 @@ export class NoteWheel {
     // 3. Draw Outer Accent Ring
     this.drawOuterRing();
 
-    // 4. Draw Center Hub & Audio Waveform Visualizer
+    // 4. Draw Center Hub Display
     this.drawCenterHub(activeWaveformData, currentFreq);
 
     // 5. Draw Finger Target Reticle
@@ -101,16 +105,16 @@ export class NoteWheel {
       this.ctx.beginPath();
       this.ctx.moveTo(p1.x, p1.y);
       this.ctx.lineTo(p2.x, p2.y);
-      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      this.ctx.lineWidth = 2.5;
+      this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.7)';
+      this.ctx.lineWidth = 3;
       this.ctx.stroke();
     });
 
     landmarks.forEach((pt, idx) => {
       const isIndexTip = idx === 8;
       this.ctx.beginPath();
-      this.ctx.arc(pt.x, pt.y, isIndexTip ? 7 : 3.5, 0, Math.PI * 2);
-      this.ctx.fillStyle = isIndexTip ? '#00E5FF' : '#FFFFFF';
+      this.ctx.arc(pt.x, pt.y, isIndexTip ? 8 : 4, 0, Math.PI * 2);
+      this.ctx.fillStyle = isIndexTip ? '#FFD600' : '#00E5FF';
       this.ctx.fill();
     });
 
@@ -130,24 +134,24 @@ export class NoteWheel {
     this.ctx.closePath();
 
     if (isActive) {
-      // Pure White Active Fill
+      // Solid White Active Sector
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.fill();
 
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeStyle = '#0F172A';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeStyle = '#00E5FF';
       this.ctx.stroke();
     } else {
-      // Dark Slate High-Contrast Glassmorphism Sectors
-      this.ctx.fillStyle = 'rgba(30, 41, 59, 0.88)';
+      // Solid High-Contrast Dark Slate Sector with Cyan Accent Divider
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
       this.ctx.fill();
 
-      this.ctx.lineWidth = 1.5;
-      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       this.ctx.stroke();
     }
 
-    // High-Contrast Typography: Crisp Bold White Text with Black Outline
+    // High Visibility Note Name Label
     const midAngle = startAngle + this.sectorAngle / 2;
     const labelRadius = (this.innerRadius + this.outerRadius) / 2;
     const labelX = this.centerX + Math.cos(midAngle) * labelRadius;
@@ -157,14 +161,14 @@ export class NoteWheel {
     this.ctx.textBaseline = 'middle';
 
     if (isActive) {
-      this.ctx.font = 'bold 22px "Outfit", sans-serif';
-      this.ctx.fillStyle = '#000000';
+      this.ctx.font = '800 24px "Outfit", sans-serif';
+      this.ctx.fillStyle = '#0F172A';
       this.ctx.fillText(note.name, labelX, labelY);
     } else {
-      this.ctx.font = '700 19px "Outfit", sans-serif';
+      this.ctx.font = '800 22px "Outfit", sans-serif';
       
-      // Outline stroke for 100% visibility over any background
-      this.ctx.lineWidth = 3;
+      // Black stroke outline guarantees 100% visibility over any background
+      this.ctx.lineWidth = 4;
       this.ctx.strokeStyle = '#000000';
       this.ctx.strokeText(note.name, labelX, labelY);
 
@@ -180,21 +184,21 @@ export class NoteWheel {
 
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.outerRadius + 2, 0, Math.PI * 2);
-    this.ctx.lineWidth = 2.5;
+    this.ctx.lineWidth = 3;
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     this.ctx.stroke();
 
     for (let i = 0; i < 60; i++) {
       const angle = (Math.PI * 2 / 60) * i;
       const isMajor = i % 5 === 0;
-      const r1 = this.outerRadius + 3;
-      const r2 = this.outerRadius + (isMajor ? 10 : 6);
+      const r1 = this.outerRadius + 4;
+      const r2 = this.outerRadius + (isMajor ? 12 : 7);
 
       this.ctx.beginPath();
       this.ctx.moveTo(this.centerX + Math.cos(angle) * r1, this.centerY + Math.sin(angle) * r1);
       this.ctx.lineTo(this.centerX + Math.cos(angle) * r2, this.centerY + Math.sin(angle) * r2);
       this.ctx.lineWidth = isMajor ? 2 : 1;
-      this.ctx.strokeStyle = isMajor ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)';
+      this.ctx.strokeStyle = isMajor ? 'rgba(0, 229, 255, 0.7)' : 'rgba(255, 255, 255, 0.2)';
       this.ctx.stroke();
     }
 
@@ -204,17 +208,17 @@ export class NoteWheel {
   drawCenterHub(waveformData, currentFreq) {
     this.ctx.save();
 
-    // Dark Center Hub
+    // Solid Center Display Hub
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.innerRadius - 3, 0, Math.PI * 2);
     this.ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
     this.ctx.fill();
 
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    this.ctx.lineWidth = 2.5;
+    this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
     this.ctx.stroke();
 
-    // Audio Waveform Ring
+    // Audio Waveform
     if (waveformData && waveformData.length > 0 && this.activeNoteIndex >= 0) {
       this.ctx.beginPath();
       const waveRadius = this.innerRadius * 0.65;
@@ -222,7 +226,7 @@ export class NoteWheel {
 
       for (let i = 0; i < waveformData.length; i++) {
         const v = waveformData[i] / 128.0;
-        const r = waveRadius + (v - 1) * 12;
+        const r = waveRadius + (v - 1) * 14;
         const angle = i * sliceAngle;
         const x = this.centerX + Math.cos(angle) * r;
         const y = this.centerY + Math.sin(angle) * r;
@@ -231,8 +235,8 @@ export class NoteWheel {
         else this.ctx.lineTo(x, y);
       }
       this.ctx.closePath();
-      this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 1.5;
+      this.ctx.strokeStyle = '#00E5FF';
+      this.ctx.lineWidth = 2;
       this.ctx.stroke();
     }
 
@@ -241,23 +245,23 @@ export class NoteWheel {
 
     if (this.activeNoteIndex >= 0) {
       const activeNote = this.notes[this.activeNoteIndex];
-      this.ctx.font = 'bold 24px "Outfit", sans-serif';
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.fillText(activeNote.name, this.centerX, this.centerY - 5);
+      this.ctx.font = 'bold 26px "Outfit", sans-serif';
+      this.ctx.fillStyle = '#00E5FF';
+      this.ctx.fillText(activeNote.name, this.centerX, this.centerY - 6);
 
       if (currentFreq) {
-        this.ctx.font = '10px monospace';
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.fillText(`${Math.round(currentFreq)} Hz`, this.centerX, this.centerY + 14);
+        this.ctx.font = '11px monospace';
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        this.ctx.fillText(`${Math.round(currentFreq)} Hz`, this.centerX, this.centerY + 16);
       }
     } else {
-      this.ctx.font = '600 10px "Outfit", sans-serif';
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      this.ctx.fillText('HOVER NOTE', this.centerX, this.centerY - 4);
+      this.ctx.font = '700 11px "Outfit", sans-serif';
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      this.ctx.fillText('HOVER NOTE', this.centerX, this.centerY - 5);
 
-      this.ctx.font = '9px sans-serif';
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      this.ctx.fillText('A ➔ G#', this.centerX, this.centerY + 10);
+      this.ctx.font = '10px sans-serif';
+      this.ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+      this.ctx.fillText('A ➔ G# Scale', this.centerX, this.centerY + 12);
     }
 
     this.ctx.restore();
@@ -267,13 +271,13 @@ export class NoteWheel {
     this.ctx.save();
     
     this.ctx.beginPath();
-    this.ctx.arc(cursorPos.x, cursorPos.y, 15, 0, Math.PI * 2);
-    this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 2;
+    this.ctx.arc(cursorPos.x, cursorPos.y, 16, 0, Math.PI * 2);
+    this.ctx.strokeStyle = cursorPos.isCamera ? '#00E5FF' : '#FFD600';
+    this.ctx.lineWidth = 2.5;
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.arc(cursorPos.x, cursorPos.y, 4, 0, Math.PI * 2);
+    this.ctx.arc(cursorPos.x, cursorPos.y, 5, 0, Math.PI * 2);
     this.ctx.fillStyle = '#FFFFFF';
     this.ctx.fill();
 
@@ -287,7 +291,7 @@ export class NoteWheel {
     const dy = pos.y - this.centerY;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < this.innerRadius || dist > this.outerRadius + 12) {
+    if (dist < this.innerRadius || dist > this.outerRadius + 15) {
       return -1;
     }
 
