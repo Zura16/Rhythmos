@@ -2,6 +2,7 @@ import { AudioEngine } from './audioEngine.js';
 import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
 import { Ferrofluid } from './ferrofluid.js';
+import { SongBookManager } from './songBook.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
@@ -14,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const btnToggleCamera = document.getElementById('btnToggleCamera');
   const btnTestAudio = document.getElementById('btnTestAudio');
+  const btnToggleSongbookDrawer = document.getElementById('btnToggleSongbookDrawer');
+  const songbookDrawer = document.getElementById('songbookDrawer');
 
   const cameraDot = document.getElementById('cameraDot');
   const cameraStatusText = document.getElementById('cameraStatusText');
@@ -53,10 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const audioEngine = new AudioEngine();
   const noteWheel = new NoteWheel(mainCanvas);
+
+  // Initialize Songbook Teleprompter
+  const songBookManager = new SongBookManager(songbookDrawer, (selectedChordStr) => {
+    noteWheel.setHighlightedChord(selectedChordStr);
+  });
+  songBookManager.render();
+
+  if (btnToggleSongbookDrawer) {
+    btnToggleSongbookDrawer.addEventListener('click', () => {
+      songbookDrawer.classList.toggle('collapsed');
+    });
+  }
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
-  let currentActiveChord = null; // { root, quality, octaveOffset, index }
+  let currentActiveChord = null;
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
@@ -92,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Helper to compare chord states
   function isSameChord(c1, c2) {
     if (!c1 && !c2) return true;
     if (!c1 || !c2) return false;

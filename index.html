@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rhythmos - Professional Vision Music Player</title>
-  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, harmonium & acoustic instruments, and Web Audio synthesis.">
+  <title>Rhythmos - Vision Music Player & Teleprompter</title>
+  <meta name="description" content="Rhythmos: Vision-based music player featuring gesture hand tracking, acoustic instruments, lyrics teleprompter, and Web Audio synthesis.">
   
   <link rel="stylesheet" href="./src/style.css">
   
@@ -20,6 +20,9 @@
     <canvas id="mainCanvas"></canvas>
   </div>
 
+  <!-- Songbook & Teleprompter Drawer (Left Side) -->
+  <aside class="songbook-drawer collapsed" id="songbookDrawer"></aside>
+
   <!-- Top Dropdown Navigation Menu Bar -->
   <header class="top-navbar">
     <div class="nav-brand">
@@ -29,6 +32,11 @@
         <p>A to G# Scale</p>
       </div>
     </div>
+
+    <!-- Songbook Teleprompter Toggle Button -->
+    <button id="btnToggleSongbookDrawer" class="nav-btn-action" style="background: rgba(0, 229, 255, 0.2); border-color: rgba(0, 229, 255, 0.4);">
+      <span>🎤</span> Songbook Lyrics
+    </button>
 
     <!-- Dropdown Menu Item 1: Camera Controls -->
     <div class="nav-item dropdown">
