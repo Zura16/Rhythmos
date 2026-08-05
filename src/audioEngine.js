@@ -1,4 +1,4 @@
-// Professional Acoustic & Classical Instrument Audio Engine
+// Professional Acoustic & Classical Instrument Audio Engine with Harmonium
 export class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -14,7 +14,7 @@ export class AudioEngine {
 
     this.volume = 0.85;
     this.reverbLevel = 0.35;
-    this.currentInstrument = 'piano'; // 'piano', 'guitar', 'strings', 'marimba', 'rhodes', 'organ'
+    this.currentInstrument = 'harmonium'; // 'harmonium', 'piano', 'guitar', 'strings', 'marimba', 'rhodes', 'organ'
     this.octave = 4;
     
     this.activeVoices = new Map();
@@ -88,7 +88,7 @@ export class AudioEngine {
   createImpulseResponse() {
     if (!this.ctx) return;
     const sampleRate = this.ctx.sampleRate;
-    const length = sampleRate * 2.8; // 2.8s concert hall reverberation
+    const length = sampleRate * 2.8;
     const impulse = this.ctx.createBuffer(2, length, sampleRate);
     const left = impulse.getChannelData(0);
     const right = impulse.getChannelData(1);
@@ -177,8 +177,59 @@ export class AudioEngine {
     const nodes = [];
     let releaseTime = 0.4;
 
-    if (instrument === 'piano') {
-      // 1. Grand Piano (Additive String Harmonics + Hammer Strike Transient)
+    if (instrument === 'harmonium') {
+      // Free-Reed Indian Harmonium (Dual Reed Ranks + Octave Coupler + Bellows Modulation)
+      const reed1 = this.ctx.createOscillator(); // Fundamental Male Reed
+      const reed2 = this.ctx.createOscillator(); // Octave Female Coupler Reed
+      const subReed = this.ctx.createOscillator(); // Sub-bass Drone Reed
+
+      reed1.type = 'sawtooth';
+      reed2.type = 'square';
+      subReed.type = 'sawtooth';
+
+      reed1.frequency.setValueAtTime(freq, now);
+      reed2.frequency.setValueAtTime(freq * 2.002, now); // Detuned octave coupler
+      subReed.frequency.setValueAtTime(freq * 0.5, now);
+
+      // Bellows Air Pressure Tremolo
+      const bellowsLfo = this.ctx.createOscillator();
+      const bellowsGain = this.ctx.createGain();
+      bellowsLfo.type = 'sine';
+      bellowsLfo.frequency.setValueAtTime(5.5, now);
+      bellowsGain.gain.setValueAtTime(0.08, now);
+
+      bellowsLfo.connect(bellowsGain);
+
+      // Wooden Reed Chamber Resonant Filter
+      const chamberFilter = this.ctx.createBiquadFilter();
+      chamberFilter.type = 'lowpass';
+      chamberFilter.frequency.setValueAtTime(freq * 3.5, now);
+      chamberFilter.Q.setValueAtTime(2.2, now);
+
+      const r2Gain = this.ctx.createGain();
+      const subGain = this.ctx.createGain();
+      r2Gain.gain.setValueAtTime(0.45, now);
+      subGain.gain.setValueAtTime(0.25, now);
+
+      reed2.connect(r2Gain);
+      subReed.connect(subGain);
+
+      reed1.connect(chamberFilter);
+      r2Gain.connect(chamberFilter);
+      subGain.connect(chamberFilter);
+
+      chamberFilter.connect(voiceGain);
+      bellowsGain.connect(voiceGain.gain);
+
+      nodes.push(reed1, reed2, subReed, bellowsLfo, bellowsGain, r2Gain, subGain, chamberFilter);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.78, now + 0.05); // Bellows air entry
+      voiceGain.gain.setValueAtTime(0.65, now + 0.3);
+      releaseTime = 0.45;
+
+    } else if (instrument === 'piano') {
+      // Acoustic Grand Piano
       const fundamental = this.ctx.createOscillator();
       const octaveHarmonic = this.ctx.createOscillator();
       const fifthHarmonic = this.ctx.createOscillator();
@@ -191,7 +242,6 @@ export class AudioEngine {
       octaveHarmonic.frequency.setValueAtTime(freq * 2.001, now);
       fifthHarmonic.frequency.setValueAtTime(freq * 3.002, now);
 
-      // Acoustic Soundboard Filter
       const soundboardFilter = this.ctx.createBiquadFilter();
       soundboardFilter.type = 'lowpass';
       soundboardFilter.frequency.setValueAtTime(freq * 4.5, now);
@@ -213,12 +263,12 @@ export class AudioEngine {
       nodes.push(fundamental, octaveHarmonic, fifthHarmonic, octGain, fifthGain, soundboardFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.9, now + 0.008); // Sharp hammer strike
-      voiceGain.gain.exponentialRampToValueAtTime(0.4, now + 0.35); // String decay
+      voiceGain.gain.linearRampToValueAtTime(0.9, now + 0.008);
+      voiceGain.gain.exponentialRampToValueAtTime(0.4, now + 0.35);
       releaseTime = 0.5;
 
     } else if (instrument === 'guitar') {
-      // 2. Acoustic Nylon Guitar (Plucked String + Wooden Body Resonance)
+      // Acoustic Nylon Guitar
       const stringOsc = this.ctx.createOscillator();
       const overtoneOsc = this.ctx.createOscillator();
 
@@ -228,7 +278,6 @@ export class AudioEngine {
       stringOsc.frequency.setValueAtTime(freq, now);
       overtoneOsc.frequency.setValueAtTime(freq * 2, now);
 
-      // Hollow Guitar Body Resonance Filter
       const bodyFilter = this.ctx.createBiquadFilter();
       bodyFilter.type = 'bandpass';
       bodyFilter.frequency.setValueAtTime(1100, now);
@@ -251,12 +300,12 @@ export class AudioEngine {
       nodes.push(stringOsc, overtoneOsc, bodyFilter, directGain, bodyGain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.85, now + 0.006); // Finger pluck
+      voiceGain.gain.linearRampToValueAtTime(0.85, now + 0.006);
       voiceGain.gain.exponentialRampToValueAtTime(0.15, now + 0.4);
       releaseTime = 0.4;
 
     } else if (instrument === 'strings') {
-      // 3. Symphonic Strings / Violin (Bowed String + Gentle Vibrato)
+      // Symphonic Strings
       const string1 = this.ctx.createOscillator();
       const string2 = this.ctx.createOscillator();
       const vibratoLfo = this.ctx.createOscillator();
@@ -268,14 +317,13 @@ export class AudioEngine {
 
       string1.frequency.setValueAtTime(freq, now);
       string2.frequency.setValueAtTime(freq * 1.002, now);
-      vibratoLfo.frequency.setValueAtTime(5.2, now); // 5.2Hz natural vibrato
+      vibratoLfo.frequency.setValueAtTime(5.2, now);
       vibratoGain.gain.setValueAtTime(2.2, now);
 
       vibratoLfo.connect(vibratoGain);
       vibratoGain.connect(string1.frequency);
       vibratoGain.connect(string2.frequency);
 
-      // String Section Filter
       const sectionFilter = this.ctx.createBiquadFilter();
       sectionFilter.type = 'lowpass';
       sectionFilter.frequency.setValueAtTime(freq * 3.2, now);
@@ -287,12 +335,12 @@ export class AudioEngine {
       nodes.push(string1, string2, vibratoLfo, vibratoGain, sectionFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.7, now + 0.12); // Smooth bow attack
+      voiceGain.gain.linearRampToValueAtTime(0.7, now + 0.12);
       voiceGain.gain.setValueAtTime(0.55, now + 0.35);
       releaseTime = 0.6;
 
     } else if (instrument === 'marimba') {
-      // 4. Concert Marimba / Vibraphone (Acoustic Rosewood Bar + Aluminum Tube Resonator)
+      // Concert Marimba
       const barOsc = this.ctx.createOscillator();
       const tineOsc = this.ctx.createOscillator();
 
@@ -300,11 +348,11 @@ export class AudioEngine {
       tineOsc.type = 'sine';
 
       barOsc.frequency.setValueAtTime(freq, now);
-      tineOsc.frequency.setValueAtTime(freq * 4.0, now); // 4:1 overtone ratio
+      tineOsc.frequency.setValueAtTime(freq * 4.0, now);
 
       const tineGain = this.ctx.createGain();
       tineGain.gain.setValueAtTime(0.35, now);
-      tineGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08); // Fast ring
+      tineGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
       tineOsc.connect(tineGain);
       barOsc.connect(voiceGain);
@@ -313,12 +361,12 @@ export class AudioEngine {
       nodes.push(barOsc, tineOsc, tineGain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.95, now + 0.004); // Mallet strike
+      voiceGain.gain.linearRampToValueAtTime(0.95, now + 0.004);
       voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
       releaseTime = 0.12;
 
     } else if (instrument === 'organ') {
-      // 5. Symphonic Church Organ (4 Pipe Ranks: 8', 4', 2', Mixture)
+      // Symphonic Pipe Organ
       const rank8 = this.ctx.createOscillator();
       const rank4 = this.ctx.createOscillator();
       const rank2 = this.ctx.createOscillator();
@@ -351,7 +399,7 @@ export class AudioEngine {
       releaseTime = 0.5;
 
     } else {
-      // 6. Vintage Rhodes Electric Piano (Tine Bell Strike + Warm Drive)
+      // Vintage Rhodes Electric Piano
       const tineFund = this.ctx.createOscillator();
       const tineHarm = this.ctx.createOscillator();
 
@@ -359,7 +407,7 @@ export class AudioEngine {
       tineHarm.type = 'sine';
 
       tineFund.frequency.setValueAtTime(freq, now);
-      tineHarm.frequency.setValueAtTime(freq * 6.5, now); // Tine harmonic
+      tineHarm.frequency.setValueAtTime(freq * 6.5, now);
 
       const harmGain = this.ctx.createGain();
       harmGain.gain.setValueAtTime(0.4, now);
