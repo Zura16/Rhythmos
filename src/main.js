@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
-  let currentActiveNoteIndex = -1;
+  let currentActiveChord = null; // { root, quality, index }
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
@@ -92,41 +92,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Helper to compare chords
+  function isSameChord(c1, c2) {
+    if (!c1 && !c2) return true;
+    if (!c1 || !c2) return false;
+    return c1.root === c2.root && c1.quality === c2.quality;
+  }
+
   // Main Render Frame Loop
   function renderLoop() {
-    const detectedNoteIndex = noteWheel.getNoteAtPosition(latestCursorPos);
+    const detectedChord = noteWheel.getNoteAtPosition(latestCursorPos);
 
-    if (detectedNoteIndex !== currentActiveNoteIndex) {
-      if (currentActiveNoteIndex >= 0) {
-        const oldNote = noteWheel.notes[currentActiveNoteIndex];
-        audioEngine.stopNote(oldNote.name);
+    if (!isSameChord(detectedChord, currentActiveChord)) {
+      if (currentActiveChord) {
+        audioEngine.stopChord(currentActiveChord.root, currentActiveChord.quality);
       }
 
-      if (detectedNoteIndex >= 0) {
-        const newNote = noteWheel.notes[detectedNoteIndex];
-        audioEngine.startNote(newNote.name);
-        noteWheel.triggerRipple(detectedNoteIndex);
+      if (detectedChord) {
+        audioEngine.startChord(detectedChord.root, detectedChord.quality);
       }
 
-      currentActiveNoteIndex = detectedNoteIndex;
+      currentActiveChord = detectedChord;
     }
 
     let waveformData = null;
-    let currentFreq = null;
 
-    if (currentActiveNoteIndex >= 0) {
-      const activeNote = noteWheel.notes[currentActiveNoteIndex];
-      currentFreq = audioEngine.getFrequency(activeNote.name);
+    if (currentActiveChord) {
       waveformData = audioEngine.getWaveformData();
+      const qLabel = (currentActiveChord.quality === 'major') ? 'Major' : 'Minor';
 
       audioDot.classList.add('active');
-      audioStatusText.textContent = `Playing ${activeNote.name}${audioEngine.octave}`;
+      audioStatusText.textContent = `Playing ${currentActiveChord.root} ${qLabel} Chord`;
     } else {
       audioDot.classList.remove('active');
       audioStatusText.textContent = 'Audio Idle';
     }
 
-    noteWheel.draw(latestCursorPos, latestLandmarks, waveformData, currentFreq);
+    noteWheel.draw(latestCursorPos, latestLandmarks, waveformData);
 
     requestAnimationFrame(renderLoop);
   }
@@ -186,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEngine.init();
     audioEngine.resume();
     audioEngine.triggerNoteInstant('A', 4, 0.6);
-    noteWheel.triggerRipple(0);
   });
 
   // Dropdown Toggle Handlers
@@ -227,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       octaveLabel.textContent = oct;
 
       audioEngine.stopAllNotes();
-      currentActiveNoteIndex = -1;
+      currentActiveChord = null;
     });
   });
 

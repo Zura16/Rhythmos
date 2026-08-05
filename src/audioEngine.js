@@ -1,4 +1,4 @@
-// Professional Acoustic & Classical Instrument Audio Engine with Harmonium
+// Professional Acoustic Audio Engine with Polyphonic Major & Minor Chord Synthesis
 export class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -19,6 +19,12 @@ export class AudioEngine {
     
     this.activeVoices = new Map();
     this.chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    
+    this.semitoneMap = {
+      'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4,
+      'F': 5, 'F#': 6, 'G': 7, 'G#': 8,
+      'A': 9, 'A#': 10, 'B': 11
+    };
   }
 
   init() {
@@ -102,6 +108,10 @@ export class AudioEngine {
     this.reverbNode.buffer = impulse;
   }
 
+  getFrequencyFromSemitones(totalSemitonesFromA4) {
+    return 440 * Math.pow(2, totalSemitonesFromA4 / 12);
+  }
+
   getFrequency(noteName, octave = this.octave) {
     const semitonesFromA4 = {
       'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
@@ -111,63 +121,98 @@ export class AudioEngine {
 
     const baseOffset = semitonesFromA4[noteName] || 0;
     const octaveOffset = (octave - 4) * 12;
-    const totalSemitones = baseOffset + octaveOffset;
-
-    return 440 * Math.pow(2, totalSemitones / 12);
+    return this.getFrequencyFromSemitones(baseOffset + octaveOffset);
   }
 
-  startNote(noteName, octave = this.octave) {
+  // Calculate the 3 note frequencies for a Major or Minor chord
+  getChordFrequencies(rootNoteName, quality = 'major', octave = this.octave) {
+    const semitonesFromA4 = {
+      'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
+      'F': -4, 'F#': -3, 'G': -2, 'G#': -1,
+      'A': 0,  'A#': 1,  'B': 2
+    };
+
+    const rootOffset = semitonesFromA4[rootNoteName] || 0;
+    const octaveOffset = (octave - 4) * 12;
+    const rootTotal = rootOffset + octaveOffset;
+
+    // Major Chord: Root (0), Major 3rd (+4 semitones), Perfect 5th (+7 semitones)
+    // Minor Chord: Root (0), Minor 3rd (+3 semitones), Perfect 5th (+7 semitones)
+    const thirdInterval = (quality === 'major') ? 4 : 3;
+    const fifthInterval = 7;
+
+    return [
+      this.getFrequencyFromSemitones(rootTotal),
+      this.getFrequencyFromSemitones(rootTotal + thirdInterval),
+      this.getFrequencyFromSemitones(rootTotal + fifthInterval)
+    ];
+  }
+
+  startChord(rootNoteName, quality = 'major', octave = this.octave) {
     if (!this.ctx) this.init();
     this.resume();
 
-    const voiceKey = `${noteName}${octave}`;
-    if (this.activeVoices.has(voiceKey)) return;
+    const chordKey = `${rootNoteName}_${quality}_${octave}`;
+    if (this.activeVoices.has(chordKey)) return;
 
-    const freq = this.getFrequency(noteName, octave);
-    const voice = this.createVoice(freq, this.currentInstrument);
+    const freqs = this.getChordFrequencies(rootNoteName, quality, octave);
     
-    this.activeVoices.set(voiceKey, voice);
+    // Polyphonic Triad Voices (Root, 3rd, 5th)
+    const chordVoices = freqs.map((f, idx) => {
+      // Slightly balance gain across triad notes
+      const voice = this.createVoice(f, this.currentInstrument);
+      if (idx === 1) voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value * 0.85, this.ctx.currentTime);
+      if (idx === 2) voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value * 0.8, this.ctx.currentTime);
+      return voice;
+    });
+
+    this.activeVoices.set(chordKey, chordVoices);
   }
 
-  stopNote(noteName, octave = this.octave) {
-    const voiceKey = `${noteName}${octave}`;
-    const voice = this.activeVoices.get(voiceKey);
-    if (!voice) return;
+  stopChord(rootNoteName, quality = 'major', octave = this.octave) {
+    const chordKey = `${rootNoteName}_${quality}_${octave}`;
+    const chordVoices = this.activeVoices.get(chordKey);
+    if (!chordVoices) return;
 
     const now = this.ctx.currentTime;
-    const releaseTime = voice.releaseTime || 0.4;
 
-    voice.gainNode.gain.cancelScheduledValues(now);
-    voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value, now);
-    voice.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
+    chordVoices.forEach(voice => {
+      const releaseTime = voice.releaseTime || 0.4;
+      voice.gainNode.gain.cancelScheduledValues(now);
+      voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value, now);
+      voice.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
 
-    setTimeout(() => {
-      try {
-        voice.nodes.forEach(node => {
-          if (node.stop) node.stop();
-          if (node.disconnect) node.disconnect();
-        });
-        voice.gainNode.disconnect();
-      } catch (e) {
-        // Safe cleanup
-      }
-    }, releaseTime * 1000 + 50);
+      setTimeout(() => {
+        try {
+          voice.nodes.forEach(node => {
+            if (node.stop) node.stop();
+            if (node.disconnect) node.disconnect();
+          });
+          voice.gainNode.disconnect();
+        } catch (e) {}
+      }, releaseTime * 1000 + 50);
+    });
 
-    this.activeVoices.delete(voiceKey);
+    this.activeVoices.delete(chordKey);
   }
 
   stopAllNotes() {
     for (const [key] of this.activeVoices) {
-      const noteName = key.replace(/\d+/, '');
-      const octave = parseInt(key.match(/\d+/)[0], 10);
-      this.stopNote(noteName, octave);
+      const parts = key.split('_');
+      if (parts.length === 3) {
+        this.stopChord(parts[0], parts[1], parseInt(parts[2], 10));
+      } else {
+        const noteName = key.replace(/\d+/, '');
+        const octave = parseInt(key.match(/\d+/)[0], 10);
+        this.stopNote(noteName, octave);
+      }
     }
   }
 
-  triggerNoteInstant(noteName, octave = this.octave, duration = 0.6) {
-    this.startNote(noteName, octave);
+  triggerNoteInstant(rootNoteName, octave = this.octave, duration = 0.6) {
+    this.startChord(rootNoteName, 'major', octave);
     setTimeout(() => {
-      this.stopNote(noteName, octave);
+      this.stopChord(rootNoteName, 'major', octave);
     }, duration * 1000);
   }
 
@@ -178,29 +223,27 @@ export class AudioEngine {
     let releaseTime = 0.4;
 
     if (instrument === 'harmonium') {
-      // Free-Reed Indian Harmonium (Dual Reed Ranks + Octave Coupler + Bellows Modulation)
-      const reed1 = this.ctx.createOscillator(); // Fundamental Male Reed
-      const reed2 = this.ctx.createOscillator(); // Octave Female Coupler Reed
-      const subReed = this.ctx.createOscillator(); // Sub-bass Drone Reed
+      // Free-Reed Harmonium (Dual Reed Ranks + Octave Coupler + Bellows Modulation)
+      const reed1 = this.ctx.createOscillator();
+      const reed2 = this.ctx.createOscillator();
+      const subReed = this.ctx.createOscillator();
 
       reed1.type = 'sawtooth';
       reed2.type = 'square';
       subReed.type = 'sawtooth';
 
       reed1.frequency.setValueAtTime(freq, now);
-      reed2.frequency.setValueAtTime(freq * 2.002, now); // Detuned octave coupler
+      reed2.frequency.setValueAtTime(freq * 2.002, now);
       subReed.frequency.setValueAtTime(freq * 0.5, now);
 
-      // Bellows Air Pressure Tremolo
       const bellowsLfo = this.ctx.createOscillator();
       const bellowsGain = this.ctx.createGain();
       bellowsLfo.type = 'sine';
       bellowsLfo.frequency.setValueAtTime(5.5, now);
-      bellowsGain.gain.setValueAtTime(0.08, now);
+      bellowsGain.gain.setValueAtTime(0.06, now);
 
       bellowsLfo.connect(bellowsGain);
 
-      // Wooden Reed Chamber Resonant Filter
       const chamberFilter = this.ctx.createBiquadFilter();
       chamberFilter.type = 'lowpass';
       chamberFilter.frequency.setValueAtTime(freq * 3.5, now);
@@ -208,8 +251,8 @@ export class AudioEngine {
 
       const r2Gain = this.ctx.createGain();
       const subGain = this.ctx.createGain();
-      r2Gain.gain.setValueAtTime(0.45, now);
-      subGain.gain.setValueAtTime(0.25, now);
+      r2Gain.gain.setValueAtTime(0.4, now);
+      subGain.gain.setValueAtTime(0.2, now);
 
       reed2.connect(r2Gain);
       subReed.connect(subGain);
@@ -224,8 +267,8 @@ export class AudioEngine {
       nodes.push(reed1, reed2, subReed, bellowsLfo, bellowsGain, r2Gain, subGain, chamberFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.78, now + 0.05); // Bellows air entry
-      voiceGain.gain.setValueAtTime(0.65, now + 0.3);
+      voiceGain.gain.linearRampToValueAtTime(0.55, now + 0.05); // Balanced polyphonic chord volume
+      voiceGain.gain.setValueAtTime(0.45, now + 0.3);
       releaseTime = 0.45;
 
     } else if (instrument === 'piano') {
@@ -244,13 +287,13 @@ export class AudioEngine {
 
       const soundboardFilter = this.ctx.createBiquadFilter();
       soundboardFilter.type = 'lowpass';
-      soundboardFilter.frequency.setValueAtTime(freq * 4.5, now);
+      soundboardFilter.frequency.setValueAtTime(freq * 4.2, now);
       soundboardFilter.frequency.exponentialRampToValueAtTime(freq * 1.8, now + 0.5);
 
       const octGain = this.ctx.createGain();
       const fifthGain = this.ctx.createGain();
-      octGain.gain.setValueAtTime(0.4, now);
-      fifthGain.gain.setValueAtTime(0.15, now);
+      octGain.gain.setValueAtTime(0.35, now);
+      fifthGain.gain.setValueAtTime(0.12, now);
 
       octaveHarmonic.connect(octGain);
       fifthHarmonic.connect(fifthGain);
@@ -263,8 +306,8 @@ export class AudioEngine {
       nodes.push(fundamental, octaveHarmonic, fifthHarmonic, octGain, fifthGain, soundboardFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.9, now + 0.008);
-      voiceGain.gain.exponentialRampToValueAtTime(0.4, now + 0.35);
+      voiceGain.gain.linearRampToValueAtTime(0.65, now + 0.008);
+      voiceGain.gain.exponentialRampToValueAtTime(0.3, now + 0.35);
       releaseTime = 0.5;
 
     } else if (instrument === 'guitar') {
@@ -285,8 +328,8 @@ export class AudioEngine {
 
       const directGain = this.ctx.createGain();
       const bodyGain = this.ctx.createGain();
-      directGain.gain.setValueAtTime(0.7, now);
-      bodyGain.gain.setValueAtTime(0.3, now);
+      directGain.gain.setValueAtTime(0.6, now);
+      bodyGain.gain.setValueAtTime(0.25, now);
 
       stringOsc.connect(directGain);
       stringOsc.connect(bodyFilter);
@@ -300,8 +343,8 @@ export class AudioEngine {
       nodes.push(stringOsc, overtoneOsc, bodyFilter, directGain, bodyGain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.85, now + 0.006);
-      voiceGain.gain.exponentialRampToValueAtTime(0.15, now + 0.4);
+      voiceGain.gain.linearRampToValueAtTime(0.6, now + 0.006);
+      voiceGain.gain.exponentialRampToValueAtTime(0.12, now + 0.4);
       releaseTime = 0.4;
 
     } else if (instrument === 'strings') {
@@ -318,7 +361,7 @@ export class AudioEngine {
       string1.frequency.setValueAtTime(freq, now);
       string2.frequency.setValueAtTime(freq * 1.002, now);
       vibratoLfo.frequency.setValueAtTime(5.2, now);
-      vibratoGain.gain.setValueAtTime(2.2, now);
+      vibratoGain.gain.setValueAtTime(2.0, now);
 
       vibratoLfo.connect(vibratoGain);
       vibratoGain.connect(string1.frequency);
@@ -326,7 +369,7 @@ export class AudioEngine {
 
       const sectionFilter = this.ctx.createBiquadFilter();
       sectionFilter.type = 'lowpass';
-      sectionFilter.frequency.setValueAtTime(freq * 3.2, now);
+      sectionFilter.frequency.setValueAtTime(freq * 3.0, now);
 
       string1.connect(sectionFilter);
       string2.connect(sectionFilter);
@@ -335,8 +378,8 @@ export class AudioEngine {
       nodes.push(string1, string2, vibratoLfo, vibratoGain, sectionFilter);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.7, now + 0.12);
-      voiceGain.gain.setValueAtTime(0.55, now + 0.35);
+      voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.12);
+      voiceGain.gain.setValueAtTime(0.4, now + 0.35);
       releaseTime = 0.6;
 
     } else if (instrument === 'marimba') {
@@ -351,7 +394,7 @@ export class AudioEngine {
       tineOsc.frequency.setValueAtTime(freq * 4.0, now);
 
       const tineGain = this.ctx.createGain();
-      tineGain.gain.setValueAtTime(0.35, now);
+      tineGain.gain.setValueAtTime(0.3, now);
       tineGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
       tineOsc.connect(tineGain);
@@ -361,12 +404,12 @@ export class AudioEngine {
       nodes.push(barOsc, tineOsc, tineGain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.95, now + 0.004);
+      voiceGain.gain.linearRampToValueAtTime(0.7, now + 0.004);
       voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
       releaseTime = 0.12;
 
     } else if (instrument === 'organ') {
-      // Symphonic Pipe Organ
+      // Pipe Organ
       const rank8 = this.ctx.createOscillator();
       const rank4 = this.ctx.createOscillator();
       const rank2 = this.ctx.createOscillator();
@@ -381,8 +424,8 @@ export class AudioEngine {
 
       const r4Gain = this.ctx.createGain();
       const r2Gain = this.ctx.createGain();
-      r4Gain.gain.setValueAtTime(0.4, now);
-      r2Gain.gain.setValueAtTime(0.2, now);
+      r4Gain.gain.setValueAtTime(0.35, now);
+      r2Gain.gain.setValueAtTime(0.18, now);
 
       rank4.connect(r4Gain);
       rank2.connect(r2Gain);
@@ -394,12 +437,12 @@ export class AudioEngine {
       nodes.push(rank8, rank4, rank2, r4Gain, r2Gain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.75, now + 0.04);
-      voiceGain.gain.setValueAtTime(0.65, now + 0.3);
+      voiceGain.gain.linearRampToValueAtTime(0.55, now + 0.04);
+      voiceGain.gain.setValueAtTime(0.45, now + 0.3);
       releaseTime = 0.5;
 
     } else {
-      // Vintage Rhodes Electric Piano
+      // Vintage Rhodes
       const tineFund = this.ctx.createOscillator();
       const tineHarm = this.ctx.createOscillator();
 
@@ -410,7 +453,7 @@ export class AudioEngine {
       tineHarm.frequency.setValueAtTime(freq * 6.5, now);
 
       const harmGain = this.ctx.createGain();
-      harmGain.gain.setValueAtTime(0.4, now);
+      harmGain.gain.setValueAtTime(0.35, now);
       harmGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
       tineHarm.connect(harmGain);
@@ -420,8 +463,8 @@ export class AudioEngine {
       nodes.push(tineFund, tineHarm, harmGain);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.85, now + 0.005);
-      voiceGain.gain.exponentialRampToValueAtTime(0.25, now + 0.4);
+      voiceGain.gain.linearRampToValueAtTime(0.65, now + 0.005);
+      voiceGain.gain.exponentialRampToValueAtTime(0.2, now + 0.4);
       releaseTime = 0.35;
     }
 
