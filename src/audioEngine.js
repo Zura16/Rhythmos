@@ -1,4 +1,4 @@
-// High-Performance Web Audio API Polyphonic Synth Engine
+// High-Performance Web Audio API Polyphonic Synth Engine with Studio Quality Instruments
 export class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -10,16 +10,10 @@ export class AudioEngine {
     
     this.volume = 0.8;
     this.reverbLevel = 0.3;
-    this.currentTimbre = 'synth'; // 'synth', 'chime', 'marimba', 'pad'
+    this.currentTimbre = 'piano'; // Default: Acoustic Piano
     this.octave = 4;
     
-    // Active note tracking for sustained hover
-    this.activeVoices = new Map(); // key -> voice object
-    
-    this.chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    
-    // Custom note ordering for circle starting at A (12 o'clock)
-    this.circleNotes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+    this.activeVoices = new Map();
   }
 
   init() {
@@ -28,22 +22,18 @@ export class AudioEngine {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     this.ctx = new AudioCtx();
     
-    // Master Gain
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
 
-    // Analyser node for UI visualizer
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 256;
 
-    // Reverb / Impulse Response
     this.reverbNode = this.ctx.createConvolver();
     this.dryGain = this.ctx.createGain();
     this.wetGain = this.ctx.createGain();
 
     this.createImpulseResponse();
 
-    // Routing
     this.dryGain.gain.setValueAtTime(1 - this.reverbLevel * 0.5, this.ctx.currentTime);
     this.wetGain.gain.setValueAtTime(this.reverbLevel, this.ctx.currentTime);
 
@@ -65,13 +55,13 @@ export class AudioEngine {
   createImpulseResponse() {
     if (!this.ctx) return;
     const sampleRate = this.ctx.sampleRate;
-    const length = sampleRate * 2.0; // 2 seconds reverb
+    const length = sampleRate * 2.2;
     const impulse = this.ctx.createBuffer(2, length, sampleRate);
     const left = impulse.getChannelData(0);
     const right = impulse.getChannelData(1);
 
     for (let i = 0; i < length; i++) {
-      const decay = Math.exp(-i / (sampleRate * 0.4));
+      const decay = Math.exp(-i / (sampleRate * 0.45));
       left[i] = (Math.random() * 2 - 1) * decay;
       right[i] = (Math.random() * 2 - 1) * decay;
     }
@@ -80,8 +70,6 @@ export class AudioEngine {
   }
 
   getFrequency(noteName, octave = this.octave) {
-    // A4 = 440 Hz
-    // Index of A in chromatic scale (C=0, C#=1, ..., A=9)
     const semitonesFromA4 = {
       'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
       'F': -4, 'F#': -3, 'G': -2, 'G#': -1,
@@ -100,9 +88,7 @@ export class AudioEngine {
     this.resume();
 
     const voiceKey = `${noteName}${octave}`;
-    if (this.activeVoices.has(voiceKey)) {
-      return; // Already playing
-    }
+    if (this.activeVoices.has(voiceKey)) return;
 
     const freq = this.getFrequency(noteName, octave);
     const voice = this.createVoice(freq, this.currentTimbre);
@@ -118,7 +104,6 @@ export class AudioEngine {
     const now = this.ctx.currentTime;
     const releaseTime = voice.releaseTime || 0.3;
 
-    // Release envelope
     voice.gainNode.gain.cancelScheduledValues(now);
     voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value, now);
     voice.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
@@ -128,9 +113,7 @@ export class AudioEngine {
         voice.oscillators.forEach(osc => osc.stop());
         voice.oscillators.forEach(osc => osc.disconnect());
         voice.gainNode.disconnect();
-      } catch (e) {
-        // Safe cleanup
-      }
+      } catch (e) {}
     }, releaseTime * 1000 + 50);
 
     this.activeVoices.delete(voiceKey);
@@ -144,7 +127,7 @@ export class AudioEngine {
     }
   }
 
-  triggerNoteInstant(noteName, octave = this.octave, duration = 0.4) {
+  triggerNoteInstant(noteName, octave = this.octave, duration = 0.5) {
     this.startNote(noteName, octave);
     setTimeout(() => {
       this.stopNote(noteName, octave);
@@ -155,34 +138,93 @@ export class AudioEngine {
     const now = this.ctx.currentTime;
     const voiceGain = this.ctx.createGain();
     const oscList = [];
-    let releaseTime = 0.3;
+    let releaseTime = 0.35;
 
-    if (timbre === 'chime') {
-      // Pure Crystal Chime: Main sine + subtle octave overtone
+    if (timbre === 'piano') {
+      // 🎹 Acoustic Grand Piano: Fundamental sine + triangle + octave overtones + hammer transient
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
+      const osc3 = this.ctx.createOscillator();
+
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+      osc3.type = 'sine';
+
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq * 2, now); // 2nd harmonic
+      osc3.frequency.setValueAtTime(freq * 3, now); // 3rd harmonic
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 3.5, now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.4);
+
+      const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.35, now);
+      const g3 = this.ctx.createGain(); g3.gain.setValueAtTime(0.15, now);
+
+      osc2.connect(g2); osc3.connect(g3);
+      osc1.connect(filter); g2.connect(filter); g3.connect(filter);
+      filter.connect(voiceGain);
+
+      oscList.push(osc1, osc2, osc3);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.85, now + 0.008); // Percussive hammer attack
+      voiceGain.gain.exponentialRampToValueAtTime(0.35, now + 0.35); // Decay
+      releaseTime = 0.45;
+
+    } else if (timbre === 'chime') {
+      // 🔔 Crystal Chime / Vibraphone: Metallic inharmonic overtones
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const osc3 = this.ctx.createOscillator();
+
       osc1.type = 'sine';
       osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(freq, now);
-      osc2.frequency.setValueAtTime(freq * 2, now);
+      osc3.type = 'sine';
 
-      const osc2Gain = this.ctx.createGain();
-      osc2Gain.gain.setValueAtTime(0.25, now);
-      osc2.connect(osc2Gain);
-      
-      osc1.connect(voiceGain);
-      osc2Gain.connect(voiceGain);
-      
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq * 2.756, now); // Metallic overtone
+      osc3.frequency.setValueAtTime(freq * 5.404, now);
+
+      const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.2, now);
+      const g3 = this.ctx.createGain(); g3.gain.setValueAtTime(0.08, now);
+
+      osc2.connect(g2); osc3.connect(g3);
+      osc1.connect(voiceGain); g2.connect(voiceGain); g3.connect(voiceGain);
+      oscList.push(osc1, osc2, osc3);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.75, now + 0.01);
+      voiceGain.gain.exponentialRampToValueAtTime(0.3, now + 0.4);
+      releaseTime = 0.6;
+
+    } else if (timbre === 'guitar') {
+      // 🎸 Plucked Acoustic Guitar / Harp: Bright transient pluck & filtered decay
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+
+      osc1.type = 'sawtooth';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq * 1.001, now);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 6, now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.2, now + 0.18);
+
+      osc1.connect(filter); osc2.connect(filter);
+      filter.connect(voiceGain);
       oscList.push(osc1, osc2);
 
-      // ADSR Envelope
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.7, now + 0.03); // Attack
-      voiceGain.gain.exponentialRampToValueAtTime(0.4, now + 0.3); // Decay / Sustain
-      releaseTime = 0.5;
+      voiceGain.gain.linearRampToValueAtTime(0.9, now + 0.005); // String pluck
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+      releaseTime = 0.2;
 
     } else if (timbre === 'marimba') {
-      // Percussive Marimba: Triangle wave with fast decay
+      // 🪵 Percussive Wooden Marimba
       const osc = this.ctx.createOscillator();
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, now);
@@ -190,66 +232,120 @@ export class AudioEngine {
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(freq * 4, now);
-      filter.frequency.exponentialRampToValueAtTime(freq * 1.2, now + 0.2);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.1, now + 0.15);
 
       osc.connect(filter);
       filter.connect(voiceGain);
       oscList.push(osc);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.9, now + 0.008);
-      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-      releaseTime = 0.1;
+      voiceGain.gain.linearRampToValueAtTime(0.95, now + 0.005);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      releaseTime = 0.12;
 
-    } else if (timbre === 'pad') {
-      // Cosmic Pad: Dual detuned warmth with soft attack
+    } else if (timbre === 'brass') {
+      // 🎷 Brass Lead / Sax: Resonant filter envelope with subtle vibrato
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
       osc1.type = 'sawtooth';
-      osc2.type = 'sine';
-      osc1.frequency.setValueAtTime(freq - 1.5, now);
-      osc2.frequency.setValueAtTime(freq + 1.5, now);
+      osc2.type = 'square';
+
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq * 1.003, now);
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(freq * 2.5, now);
+      filter.Q.setValueAtTime(4, now); // Resonance
+      filter.frequency.setValueAtTime(freq * 1.5, now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 4.5, now + 0.08);
 
-      osc1.connect(filter);
-      osc2.connect(filter);
+      osc1.connect(filter); osc2.connect(filter);
       filter.connect(voiceGain);
       oscList.push(osc1, osc2);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
-      voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.15); // Warm attack
-      voiceGain.gain.setValueAtTime(0.4, now + 0.4);
+      voiceGain.gain.linearRampToValueAtTime(0.8, now + 0.04);
+      releaseTime = 0.3;
+
+    } else if (timbre === 'strings') {
+      // 🎻 String Ensemble: Polyphonic chorus detuned saws with bow attack
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const osc3 = this.ctx.createOscillator();
+
+      osc1.type = 'sawtooth';
+      osc2.type = 'sawtooth';
+      osc3.type = 'sawtooth';
+
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq - 1.8, now);
+      osc3.frequency.setValueAtTime(freq + 1.8, now);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 2.8, now);
+
+      osc1.connect(filter); osc2.connect(filter); osc3.connect(filter);
+      filter.connect(voiceGain);
+      oscList.push(osc1, osc2, osc3);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.65, now + 0.12); // Smooth bow attack
+      releaseTime = 0.55;
+
+    } else if (timbre === 'retro') {
+      // 👾 8-Bit Retro Game Synth
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now);
+
+      osc.connect(voiceGain);
+      oscList.push(osc);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+      releaseTime = 0.15;
+
+    } else if (timbre === 'pad') {
+      // 🌌 Cosmic Pad: Warm detuned pad
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(freq - 1.2, now);
+      osc2.frequency.setValueAtTime(freq + 1.2, now);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 2.2, now);
+
+      osc1.connect(filter); osc2.connect(filter);
+      filter.connect(voiceGain);
+      oscList.push(osc1, osc2);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(0.5, now + 0.18);
       releaseTime = 0.6;
 
     } else {
-      // Default: Grand Synth (Rich Sawtooth / Square with dynamic filter envelope)
+      // 🎹 Default Grand Synth
       const osc1 = this.ctx.createOscillator();
       const osc2 = this.ctx.createOscillator();
       osc1.type = 'sawtooth';
       osc2.type = 'square';
       osc1.frequency.setValueAtTime(freq, now);
-      osc2.frequency.setValueAtTime(freq * 1.002, now); // Subtly detuned
+      osc2.frequency.setValueAtTime(freq * 1.002, now);
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(freq * 5, now);
-      filter.frequency.exponentialRampToValueAtTime(freq * 2, now + 0.3);
+      filter.frequency.setValueAtTime(freq * 4.5, now);
 
-      const subGain = this.ctx.createGain();
-      subGain.gain.setValueAtTime(0.3, now);
-      osc2.connect(subGain);
-
-      osc1.connect(filter);
-      subGain.connect(filter);
+      osc1.connect(filter); osc2.connect(filter);
       filter.connect(voiceGain);
       oscList.push(osc1, osc2);
 
       voiceGain.gain.setValueAtTime(0.0001, now);
       voiceGain.gain.linearRampToValueAtTime(0.8, now + 0.02);
-      voiceGain.gain.exponentialRampToValueAtTime(0.5, now + 0.2);
       releaseTime = 0.35;
     }
 
