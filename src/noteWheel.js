@@ -1,4 +1,4 @@
-// Chromatic Note Wheel Renderer - 100% High Visibility Note Wheel
+// Chromatic Note Wheel Renderer - 100% Centered High Visibility Note Wheel
 export class NoteWheel {
   constructor(canvas) {
     this.canvas = canvas;
@@ -6,18 +6,18 @@ export class NoteWheel {
     
     // 12 Chromatic Notes (A to G#) starting at 12 o'clock
     this.notes = [
-      { name: 'A',  color: '#FF2D55' },
-      { name: 'A#', color: '#9C27B0' },
-      { name: 'B',  color: '#673AB7' },
-      { name: 'C',  color: '#00E5FF' },
-      { name: 'C#', color: '#00897B' },
-      { name: 'D',  color: '#00E676' },
-      { name: 'D#', color: '#2E7D32' },
-      { name: 'E',  color: '#AEEA00' },
-      { name: 'F',  color: '#FFD600' },
-      { name: 'F#', color: '#FF6D00' },
-      { name: 'G',  color: '#FF3D00' },
-      { name: 'G#', color: '#C2185B' }
+      { name: 'A' },
+      { name: 'A#' },
+      { name: 'B' },
+      { name: 'C' },
+      { name: 'C#' },
+      { name: 'D' },
+      { name: 'D#' },
+      { name: 'E' },
+      { name: 'F' },
+      { name: 'F#' },
+      { name: 'G' },
+      { name: 'G#' }
     ];
 
     this.activeNoteIndex = -1;
@@ -45,19 +45,21 @@ export class NoteWheel {
     const H = window.innerHeight || 720;
     const dpr = window.devicePixelRatio || 1;
 
-    // Explicitly set element CSS dimensions AND buffer dimensions
+    // Set CSS display size
     this.canvas.style.width = `${W}px`;
     this.canvas.style.height = `${H}px`;
+
+    // Set pixel buffer size for retina displays
     this.canvas.width = Math.floor(W * dpr);
     this.canvas.height = Math.floor(H * dpr);
 
-    // Position wheel centered-right for optimum visibility
-    this.centerX = W * 0.62;
-    this.centerY = H * 0.52;
+    // Center wheel accessibly in the middle of the screen
+    this.centerX = W / 2;
+    this.centerY = H / 2 + 20; // Slightly below top header
     
     const minDim = Math.min(W, H);
-    this.outerRadius = Math.max(160, minDim * 0.32);
-    this.innerRadius = Math.max(60, minDim * 0.12);
+    this.outerRadius = Math.max(180, minDim * 0.35);
+    this.innerRadius = Math.max(70, minDim * 0.14);
   }
 
   draw(cursorPos, screenLandmarks = null, activeWaveformData = null, currentFreq = null) {
@@ -65,10 +67,10 @@ export class NoteWheel {
     const H = window.innerHeight || 720;
     const dpr = window.devicePixelRatio || 1;
 
-    // Set DPR scale on every frame
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.scale(dpr, dpr);
+    // Set DPI transform matrix once per frame
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // Clear entire viewport
     this.ctx.clearRect(0, 0, W, H);
 
     this.activeNoteIndex = this.getNoteAtPosition(cursorPos);
@@ -105,7 +107,7 @@ export class NoteWheel {
       this.ctx.beginPath();
       this.ctx.moveTo(p1.x, p1.y);
       this.ctx.lineTo(p2.x, p2.y);
-      this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.7)';
+      this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.8)';
       this.ctx.lineWidth = 3;
       this.ctx.stroke();
     });
@@ -142,16 +144,16 @@ export class NoteWheel {
       this.ctx.strokeStyle = '#00E5FF';
       this.ctx.stroke();
     } else {
-      // Solid High-Contrast Dark Slate Sector with Cyan Accent Divider
-      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      // Solid High-Contrast Dark Slate Sector Card
+      this.ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
       this.ctx.fill();
 
       this.ctx.lineWidth = 2;
-      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
       this.ctx.stroke();
     }
 
-    // High Visibility Note Name Label
+    // High Visibility Note Label Typography
     const midAngle = startAngle + this.sectorAngle / 2;
     const labelRadius = (this.innerRadius + this.outerRadius) / 2;
     const labelX = this.centerX + Math.cos(midAngle) * labelRadius;
@@ -161,11 +163,11 @@ export class NoteWheel {
     this.ctx.textBaseline = 'middle';
 
     if (isActive) {
-      this.ctx.font = '800 24px "Outfit", sans-serif';
+      this.ctx.font = '800 26px "Outfit", sans-serif';
       this.ctx.fillStyle = '#0F172A';
       this.ctx.fillText(note.name, labelX, labelY);
     } else {
-      this.ctx.font = '800 22px "Outfit", sans-serif';
+      this.ctx.font = '800 24px "Outfit", sans-serif';
       
       // Black stroke outline guarantees 100% visibility over any background
       this.ctx.lineWidth = 4;
@@ -185,7 +187,7 @@ export class NoteWheel {
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.outerRadius + 2, 0, Math.PI * 2);
     this.ctx.lineWidth = 3;
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     this.ctx.stroke();
 
     for (let i = 0; i < 60; i++) {
@@ -198,7 +200,7 @@ export class NoteWheel {
       this.ctx.moveTo(this.centerX + Math.cos(angle) * r1, this.centerY + Math.sin(angle) * r1);
       this.ctx.lineTo(this.centerX + Math.cos(angle) * r2, this.centerY + Math.sin(angle) * r2);
       this.ctx.lineWidth = isMajor ? 2 : 1;
-      this.ctx.strokeStyle = isMajor ? 'rgba(0, 229, 255, 0.7)' : 'rgba(255, 255, 255, 0.2)';
+      this.ctx.strokeStyle = isMajor ? 'rgba(0, 229, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)';
       this.ctx.stroke();
     }
 
@@ -211,11 +213,11 @@ export class NoteWheel {
     // Solid Center Display Hub
     this.ctx.beginPath();
     this.ctx.arc(this.centerX, this.centerY, this.innerRadius - 3, 0, Math.PI * 2);
-    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
     this.ctx.fill();
 
     this.ctx.lineWidth = 2.5;
-    this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+    this.ctx.strokeStyle = 'rgba(0, 229, 255, 0.7)';
     this.ctx.stroke();
 
     // Audio Waveform
@@ -245,22 +247,22 @@ export class NoteWheel {
 
     if (this.activeNoteIndex >= 0) {
       const activeNote = this.notes[this.activeNoteIndex];
-      this.ctx.font = 'bold 26px "Outfit", sans-serif';
+      this.ctx.font = 'bold 28px "Outfit", sans-serif';
       this.ctx.fillStyle = '#00E5FF';
       this.ctx.fillText(activeNote.name, this.centerX, this.centerY - 6);
 
       if (currentFreq) {
-        this.ctx.font = '11px monospace';
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        this.ctx.font = '12px monospace';
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         this.ctx.fillText(`${Math.round(currentFreq)} Hz`, this.centerX, this.centerY + 16);
       }
     } else {
-      this.ctx.font = '700 11px "Outfit", sans-serif';
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      this.ctx.font = '700 12px "Outfit", sans-serif';
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
       this.ctx.fillText('HOVER NOTE', this.centerX, this.centerY - 5);
 
       this.ctx.font = '10px sans-serif';
-      this.ctx.fillStyle = 'rgba(0, 229, 255, 0.8)';
+      this.ctx.fillStyle = 'rgba(0, 229, 255, 0.85)';
       this.ctx.fillText('A ➔ G# Scale', this.centerX, this.centerY + 12);
     }
 

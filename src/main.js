@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const audioEngine = new AudioEngine();
   const noteWheel = new NoteWheel(mainCanvas);
 
+  // Force layout resize calculation immediately
+  noteWheel.resize();
+  window.addEventListener('load', () => noteWheel.resize());
+
   // 2. React Bits <PillNav /> Component Initialization
   let pillNav = null;
   if (pillNavContainer) {
@@ -164,15 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // App Start Handler - Immediate 100% Non-Blocking Response
+  // App Start Handler
   function initApp() {
-    // 1. Immediately hide splash modal visually & via class
     if (startModal) {
       startModal.style.display = 'none';
       startModal.classList.add('hidden');
     }
 
-    // 2. Initialize Web Audio API
     try {
       audioEngine.init();
       audioEngine.resume();
@@ -180,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('AudioContext resume notice:', e);
     }
 
-    // 3. Start Camera Vision asynchronously without blocking UI
     visionTracker.startCamera().then(cameraSuccess => {
       updateCameraUIStatus(cameraSuccess);
     }).catch(err => {
@@ -188,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCameraUIStatus(false);
     });
 
-    // 4. Ensure render loop is active
     startRenderLoop();
   }
 
