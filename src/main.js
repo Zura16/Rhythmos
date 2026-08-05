@@ -28,6 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
   const octaveLabel = document.getElementById('octaveLabel');
+  const currentInstLabel = document.getElementById('currentInstLabel');
+
+  const instNameMap = {
+    harmonium: '<span>🪗</span> Harmonium',
+    piano: '<span>🎹</span> Grand Piano',
+    guitar: '<span>🎸</span> Nylon Guitar',
+    strings: '<span>🎻</span> Symphonic Strings',
+    marimba: '<span>🪵</span> Concert Marimba',
+    rhodes: '<span>⚡</span> Vintage Rhodes',
+    organ: '<span>⛪</span> Church Organ'
+  };
 
   // Initialize Ferrofluid background on hero splash screen
   let ferrofluid = null;
@@ -213,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEngine.triggerNoteInstant('A', 4, 0.6);
   });
 
-  // Dropdown Toggle Handlers
+  // Dropdown Toggle Handlers (Header-03 Style with Chevron Animation)
   document.querySelectorAll('.dropdown-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -229,14 +240,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
   });
 
-  // Acoustic Instrument Selectors
+  // Acoustic Instrument Selectors (Updates Dynamic Top Label at Header-03 Trigger!)
   document.querySelectorAll('.inst-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
       const target = e.currentTarget;
       target.classList.add('active');
-      const inst = target.getAttribute('data-inst');
-      audioEngine.setInstrument(inst);
+      const instKey = target.getAttribute('data-inst');
+      
+      audioEngine.setInstrument(instKey);
+
+      // Dynamically display selected instrument at top header button!
+      if (currentInstLabel && instNameMap[instKey]) {
+        currentInstLabel.innerHTML = instNameMap[instKey];
+      }
+
+      // Close dropdown menu
+      const parent = target.closest('.nav-item');
+      if (parent) parent.classList.remove('open');
     });
   });
 
@@ -252,6 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       audioEngine.stopAllNotes();
       currentActiveChord = null;
+
+      const parent = target.closest('.nav-item');
+      if (parent) parent.classList.remove('open');
     });
   });
 
