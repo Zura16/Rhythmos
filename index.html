@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rhythmos - Vision Gesture Music Player</title>
-  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, ferrofluid background, and Web Audio synthesis.">
+  <title>Rhythmos - Studio Vision Synth & Gesture Player</title>
+  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, studio synth engine, and Web Audio synthesis.">
   
   <link rel="stylesheet" href="./src/style.css">
   
@@ -47,18 +47,20 @@
       </div>
     </div>
 
-    <!-- Dropdown Menu Item 2: Instrument Timbre -->
+    <!-- Dropdown Menu Item 2: Studio Synth Timbre Selection -->
     <div class="nav-item dropdown">
       <button class="nav-btn dropdown-toggle">
-        <span>🎹</span> Instrument <span class="arrow">▾</span>
+        <span>🎹</span> Synth Presets <span class="arrow">▾</span>
       </button>
-      <div class="dropdown-menu">
-        <div class="dropdown-header">Select Timbre</div>
+      <div class="dropdown-menu" style="min-width: 210px;">
+        <div class="dropdown-header">Studio Synth Presets</div>
         <div class="timbre-list">
-          <button class="timbre-btn active" data-timbre="synth">🎹 Grand Synth</button>
-          <button class="timbre-btn" data-timbre="chime">🔔 Crystal Chime</button>
-          <button class="timbre-btn" data-timbre="marimba">🪵 Marimba</button>
-          <button class="timbre-btn" data-timbre="pad">🌌 Cosmic Pad</button>
+          <button class="timbre-btn active" data-timbre="analog">🎹 Analog Lead</button>
+          <button class="timbre-btn" data-timbre="wave">⚡ 80s Wave Synth</button>
+          <button class="timbre-btn" data-timbre="pad">🌌 Cosmic Ambient Pad</button>
+          <button class="timbre-btn" data-timbre="fmchime">🔔 Ethereal FM Chime</button>
+          <button class="timbre-btn" data-timbre="pluck">🪵 Electric Pluck</button>
+          <button class="timbre-btn" data-timbre="bass">🎸 Moog Sub Bass</button>
         </div>
       </div>
     </div>
@@ -80,25 +82,32 @@
       </div>
     </div>
 
-    <!-- Dropdown Menu Item 4: Audio Mix & Sliders -->
+    <!-- Dropdown Menu Item 4: Audio Mix & Filter Sliders -->
     <div class="nav-item dropdown">
       <button class="nav-btn dropdown-toggle">
-        <span>🎚️</span> Audio Mix <span class="arrow">▾</span>
+        <span>🎚️</span> Audio Mix & Filter <span class="arrow">▾</span>
       </button>
-      <div class="dropdown-menu" style="min-width: 220px;">
+      <div class="dropdown-menu" style="min-width: 230px;">
         <div class="control-group">
           <div class="control-label">
             <span>Master Volume</span>
-            <span id="volVal">80%</span>
+            <span id="volVal">85%</span>
           </div>
-          <input type="range" id="volSlider" min="0" max="100" value="80">
+          <input type="range" id="volSlider" min="0" max="100" value="85">
         </div>
-        <div class="control-group" style="margin-top: 0.75rem;">
+        <div class="control-group" style="margin-top: 0.6rem;">
+          <div class="control-label">
+            <span>Filter Cutoff (Warmth)</span>
+            <span id="filterVal">2.5 kHz</span>
+          </div>
+          <input type="range" id="filterSlider" min="500" max="12000" step="100" value="2500">
+        </div>
+        <div class="control-group" style="margin-top: 0.6rem;">
           <div class="control-label">
             <span>Space Reverb</span>
-            <span id="revVal">30%</span>
+            <span id="revVal">35%</span>
           </div>
-          <input type="range" id="revSlider" min="0" max="100" value="30">
+          <input type="range" id="revSlider" min="0" max="100" value="35">
         </div>
       </div>
     </div>

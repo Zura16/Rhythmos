@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const volSlider = document.getElementById('volSlider');
   const volVal = document.getElementById('volVal');
+  const filterSlider = document.getElementById('filterSlider');
+  const filterVal = document.getElementById('filterVal');
   const revSlider = document.getElementById('revSlider');
   const revVal = document.getElementById('revVal');
   const octaveLabel = document.getElementById('octaveLabel');
@@ -136,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEngine.init();
     audioEngine.resume();
     
-    // Hide Modal & cleanup Ferrofluid instance
     startModal.classList.add('hidden');
     if (ferrofluid) {
       setTimeout(() => {
@@ -232,12 +233,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Volume & Reverb Sliders
+  // Volume, Filter & Reverb Sliders
   volSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value, 10);
     volVal.textContent = `${val}%`;
     audioEngine.setVolume(val / 100);
   });
+
+  if (filterSlider) {
+    filterSlider.addEventListener('input', (e) => {
+      const hz = parseInt(e.target.value, 10);
+      filterVal.textContent = hz >= 1000 ? `${(hz / 1000).toFixed(1)} kHz` : `${hz} Hz`;
+      audioEngine.setFilterCutoff(hz);
+    });
+  }
 
   revSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value, 10);
