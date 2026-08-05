@@ -1,10 +1,12 @@
 import { AudioEngine } from './audioEngine.js';
 import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
+import { Topography } from './Topography.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
   const webcamVideo = document.getElementById('webcamVideo');
+  const topographyContainer = document.getElementById('topographyContainer');
 
   const btnStartApp = document.getElementById('btnStartApp');
   const startModal = document.getElementById('startModal');
@@ -22,8 +24,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const revVal = document.getElementById('revVal');
   const octaveLabel = document.getElementById('octaveLabel');
 
+  // 1. Core Engines Initialization
   const audioEngine = new AudioEngine();
   const noteWheel = new NoteWheel(mainCanvas);
+
+  // 2. React Bits <Topography /> Component Integration
+  let topography = null;
+  if (topographyContainer) {
+    topography = new Topography(topographyContainer, {
+      lowColor: '#1E293B',
+      midColor: '#64748B',
+      highColor: '#CBD5E1',
+      speed: 0.25,
+      morphAmount: 2.5,
+      morphSpeed: 0.04,
+      bands: 2.5,
+      thickness: 0.012,
+      scale: 1.0,
+      glow: 0.3,
+      opacity: 0.55,
+      mouseInteraction: true,
+      mouseRadius: 0.3,
+      mouseStrength: 0.4
+    });
+  }
   
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
@@ -33,6 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (handPos) {
       latestCursorPos = handPos;
       latestLandmarks = landmarks;
+
+      // Update Topography cursor interaction with finger tracking
+      if (topography && handPos.x >= 0 && handPos.y >= 0) {
+        topography.updateCursorPos(handPos.x, handPos.y);
+      }
     } else if (latestCursorPos.isCamera) {
       latestCursorPos = { x: -1, y: -1, isCamera: false };
       latestLandmarks = null;
@@ -50,6 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
       isCamera: false
     };
     latestLandmarks = null;
+
+    if (topography) {
+      topography.updateCursorPos(clientX, clientY);
+    }
   }
 
   window.addEventListener('mousemove', updatePointerPos);
@@ -168,14 +201,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('open'));
   });
 
-  // Timbre Selectors
+  // Timbre Selectors - FIX: INSTANT SOUND SWITCHING UPON SELECTION!
   document.querySelectorAll('.timbre-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.timbre-btn').forEach(b => b.classList.remove('active'));
       const target = e.currentTarget;
       target.classList.add('active');
       const timbre = target.getAttribute('data-timbre');
+      
+      // Stop active voices & update engine timbre
       audioEngine.setTimbre(timbre);
+      audioEngine.stopAllNotes();
+      
+      // Re-trigger current note if hovering
+      const prevActiveIndex = currentActiveNoteIndex;
+      currentActiveNoteIndex = -1;
+
+      if (prevActiveIndex >= 0) {
+        const activeNote = noteWheel.notes[prevActiveIndex];
+        audioEngine.startNote(activeNote.name);
+        currentActiveNoteIndex = prevActiveIndex;
+      }
     });
   });
 

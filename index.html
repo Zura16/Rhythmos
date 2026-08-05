@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rhythmos - Vision Gesture Music Player</title>
-  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking and Web Audio synthesis.">
+  <meta name="description" content="Rhythmos: Vision-based circular music player featuring gesture hand tracking, Topography background, and Web Audio synthesis.">
   
   <link rel="stylesheet" href="./src/style.css">
+  <link rel="stylesheet" href="./src/Topography.css">
   
   <!-- MediaPipe Hands & Camera Utils CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -14,8 +15,12 @@
 </head>
 <body>
 
-  <!-- Fullscreen Camera Stream Layer -->
+  <!-- Fullscreen Viewport Layer -->
   <div class="fullscreen-viewport">
+    <!-- Topography WebGL Background Layer -->
+    <div id="topographyContainer" class="topography-container"></div>
+    
+    <!-- Camera Video Feed & Canvas Overlay -->
     <video id="webcamVideo" playsinline muted></video>
     <canvas id="mainCanvas"></canvas>
   </div>
