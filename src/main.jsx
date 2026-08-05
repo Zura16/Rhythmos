@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom/client';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { Navbar } from './components/Navbar.jsx';
 import { AudioEngine } from './audioEngine.js';
 import { NoteWheel } from './noteWheel.js';
 import { VisionTracker } from './visionTracker.js';
 import { Ferrofluid } from './ferrofluid.js';
 import { SongBookManager } from './songBook.js';
-import { Header } from './components/Header.jsx';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainCanvas = document.getElementById('mainCanvas');
@@ -16,87 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startModal = document.getElementById('startModal');
   const ferrofluidContainer = document.getElementById('ferrofluidContainer');
   const songbookDrawer = document.getElementById('songbookDrawer');
-  const reactHeaderRoot = document.getElementById('reactHeaderRoot');
-
-  // Audio Engine & Wheel Instances
-  const audioEngine = new AudioEngine();
-  const noteWheel = new NoteWheel(mainCanvas);
-
-  // App Global State for React Header Sync
-  let appState = {
-    currentInstrument: 'harmonium',
-    isCameraActive: false,
-    octave: 4,
-    volume: 0.85,
-    reverb: 0.35,
-    audioStatus: { active: false, text: 'Audio Idle' }
-  };
-
-  let reactRootInstance = null;
-
-  function renderReactHeader() {
-    if (!reactHeaderRoot) return;
-    if (!reactRootInstance) {
-      reactRootInstance = ReactDOM.createRoot(reactHeaderRoot);
-    }
-
-    reactRootInstance.render(
-      <Header
-        currentInstrument={appState.currentInstrument}
-        onSelectInstrument={(inst) => {
-          appState.currentInstrument = inst;
-          audioEngine.setInstrument(inst);
-          renderReactHeader();
-        }}
-        isCameraActive={appState.isCameraActive}
-        onToggleCamera={async () => {
-          audioEngine.init();
-          audioEngine.resume();
-
-          if (visionTracker.isRunning) {
-            visionTracker.stopCamera();
-            appState.isCameraActive = false;
-          } else {
-            const success = await visionTracker.startCamera();
-            appState.isCameraActive = success;
-          }
-          renderReactHeader();
-        }}
-        currentOctave={appState.octave}
-        onSelectOctave={(oct) => {
-          appState.octave = oct;
-          audioEngine.setOctave(oct);
-          audioEngine.stopAllNotes();
-          currentActiveChord = null;
-          renderReactHeader();
-        }}
-        volume={appState.volume}
-        onChangeVolume={(vol) => {
-          appState.volume = vol;
-          audioEngine.setVolume(vol);
-          renderReactHeader();
-        }}
-        reverb={appState.reverb}
-        onChangeReverb={(rev) => {
-          appState.reverb = rev;
-          audioEngine.setReverb(rev);
-          renderReactHeader();
-        }}
-        onToggleSongbook={() => {
-          if (songbookDrawer) songbookDrawer.classList.toggle('collapsed');
-        }}
-        onTestAudio={() => {
-          audioEngine.init();
-          audioEngine.resume();
-          audioEngine.triggerNoteInstant('A', 4, 0.6);
-        }}
-        audioStatus={appState.audioStatus}
-      />
-    );
-  }
-
-  // Initial React Mount
-  renderReactHeader();
+  const reactNavbarRoot = document.getElementById('react-navbar-root');
 
   // Initialize Ferrofluid background on hero splash screen
   let ferrofluid = null;
@@ -123,15 +43,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const audioEngine = new AudioEngine();
+  const noteWheel = new NoteWheel(mainCanvas);
+
   // Initialize Songbook Teleprompter
   const songBookManager = new SongBookManager(songbookDrawer, (selectedChordStr) => {
     noteWheel.setHighlightedChord(selectedChordStr);
   });
   songBookManager.render();
-  
+
   let latestCursorPos = { x: -1, y: -1, isCamera: false };
   let latestLandmarks = null;
   let currentActiveChord = null;
+  let audioStatusText = 'Audio Idle';
+  let isCameraActive = false;
+  let currentVolume = 85;
+  let currentReverb = 35;
+
+  let reactRoot = null;
+  if (reactNavbarRoot) {
+    reactRoot = createRoot(reactNavbarRoot);
+  }
+
+  function renderReactNavbar() {
+    if (!reactRoot) return;
+    reactRoot.render(
+      <Navbar
+        currentInstrument={audioEngine.currentInstrument}
+        onSelectInstrument={(instKey) => {
+          audioEngine.setInstrument(instKey);
+          renderReactNavbar();
+        }}
+        currentOctave={audioEngine.octave}
+        onSelectOctave={(oct) => {
+          audioEngine.setOctave(oct);
+          audioEngine.stopAllNotes();
+          currentActiveChord = null;
+          renderReactNavbar();
+        }}
+        isCameraActive={isCameraActive}
+        onToggleCamera={async () => {
+          audioEngine.init();
+          audioEngine.resume();
+          if (visionTracker.isRunning) {
+            visionTracker.stopCamera();
+            isCameraActive = false;
+          } else {
+            const success = await visionTracker.startCamera();
+            isCameraActive = success;
+          }
+          renderReactNavbar();
+        }}
+        volume={currentVolume}
+        onVolumeChange={(val) => {
+          currentVolume = val;
+          audioEngine.setVolume(val / 100);
+          renderReactNavbar();
+        }}
+        reverb={currentReverb}
+        onReverbChange={(val) => {
+          currentReverb = val;
+          audioEngine.setReverb(val / 100);
+          renderReactNavbar();
+        }}
+        onToggleSongbook={() => {
+          if (songbookDrawer) songbookDrawer.classList.toggle('collapsed');
+        }}
+        onTestAudio={() => {
+          audioEngine.init();
+          audioEngine.resume();
+          audioEngine.triggerNoteInstant('A', 4, 0.6);
+        }}
+        audioStatusText={audioStatusText}
+      />
+    );
+  }
+
+  // Initial React Navbar Render
+  renderReactNavbar();
 
   const visionTracker = new VisionTracker(webcamVideo, mainCanvas, (handPos, landmarks) => {
     if (handPos) {
@@ -204,16 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const qLabel = (currentActiveChord.quality === 'major') ? 'Major' : 'Minor';
       const actualOctave = audioEngine.octave + currentActiveChord.octaveOffset;
 
-      const newStatus = { active: true, text: `Playing ${currentActiveChord.root} ${qLabel} (Oct ${actualOctave})` };
-      if (appState.audioStatus.text !== newStatus.text) {
-        appState.audioStatus = newStatus;
-        renderReactHeader();
+      const newStatus = `Playing ${currentActiveChord.root} ${qLabel} Chord (Oct ${actualOctave})`;
+      if (newStatus !== audioStatusText) {
+        audioStatusText = newStatus;
+        renderReactNavbar();
       }
     } else {
-      const newStatus = { active: false, text: 'Audio Idle' };
-      if (appState.audioStatus.text !== newStatus.text) {
-        appState.audioStatus = newStatus;
-        renderReactHeader();
+      if (audioStatusText !== 'Audio Idle') {
+        audioStatusText = 'Audio Idle';
+        renderReactNavbar();
       }
     }
 
@@ -236,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const cameraSuccess = await visionTracker.startCamera();
-    appState.isCameraActive = cameraSuccess;
-    renderReactHeader();
+    isCameraActive = cameraSuccess;
+    renderReactNavbar();
 
     renderLoop();
   }
