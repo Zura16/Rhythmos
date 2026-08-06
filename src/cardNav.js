@@ -36,9 +36,8 @@ export class CardNav {
             <span class="hamburger-line bottom-line"></span>
           </button>
 
-          <!-- Center: Brand Logo -->
+          <!-- Center: Brand Calligraphic Logo (No Music Emoji) -->
           <div class="card-nav-brand">
-            <div class="brand-logo-icon">🎵</div>
             <span class="brand-logo-text">Rhythmos</span>
           </div>
 
@@ -50,7 +49,7 @@ export class CardNav {
           </div>
         </div>
 
-        <!-- Expanded Cards Panel Grid with Fluid Overflow Wrapper -->
+        <!-- Expanded Cards Panel Grid -->
         <div class="card-nav-panel">
           <div class="card-nav-overflow">
             <div class="card-nav-grid">

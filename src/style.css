@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tangerine:wght@700&family=Alex+Brush&family=Italianno&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@300..900&display=swap');
 
 :root {
   --bg-dark: #090D16;
@@ -7,8 +7,8 @@
   --text-dark: #0F172A;
   --text-muted: #94A3B8;
   --accent-cyan: #00E5FF;
-  --font-calligraphic: 'Great Vibes', 'Playfair Display', cursive;
-  --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-calligraphic: 'Tangerine', 'Alex Brush', 'Italianno', cursive;
+  --font-heading: 'Inter', -apple-system, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
 }
 
@@ -132,31 +132,27 @@ body {
   transform: translateY(-4.25px) rotate(-45deg);
 }
 
-/* Brand Logo with Calligraphic Font for "Rhythmos" */
+/* Refined Calligraphic Brand Logo for "Rhythmos" */
 .card-nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-}
-
-.brand-logo-icon {
-  font-size: 1.5rem;
 }
 
 .brand-logo-text {
   font-family: var(--font-calligraphic);
-  font-size: 2.4rem;
+  font-size: 2.85rem;
   font-weight: 700;
   color: #000000;
+  line-height: 0.9;
   letter-spacing: 0.01em;
-  line-height: 1;
+  padding-top: 0.15rem;
 }
 
 /* CTA Button */
 .card-nav-cta-btn {
   background: #111111;
   color: #FFFFFF;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 0.92rem;
   padding: 0.65rem 1.35rem;
@@ -173,7 +169,7 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Expanded Card Panel Grid - Ultra-Smooth Hardware Accelerated Height & Scale Animation */
+/* Expanded Card Panel Grid */
 .card-nav-panel {
   display: grid;
   grid-template-rows: 0fr;
@@ -202,7 +198,7 @@ body {
   padding-bottom: 0.25rem;
 }
 
-/* Dark Card Box with Fluid Staggered Entrance */
+/* Dark Card Box */
 .card-nav-box {
   border-radius: 18px;
   padding: 1.35rem;
@@ -226,7 +222,7 @@ body {
 .card-nav-wrapper.open .card-nav-box:nth-child(3) { transition-delay: 0.18s; }
 
 .card-box-title {
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #FFFFFF;
@@ -300,7 +296,7 @@ body {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -324,7 +320,7 @@ body {
   border: none;
   background: #FFFFFF;
   color: #0F172A;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
@@ -347,7 +343,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.1);
   color: #FFFFFF;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.88rem;
   cursor: pointer;
@@ -417,7 +413,7 @@ body {
 }
 
 .songbook-title {
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
   color: #FFFFFF;
@@ -492,7 +488,7 @@ body {
 }
 
 .song-meta-bar h3 {
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
 }
@@ -508,7 +504,7 @@ body {
   color: var(--text-main);
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -539,7 +535,7 @@ body {
   color: #FFFFFF;
   padding: 0.3rem 0.6rem;
   border-radius: 6px;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
@@ -576,7 +572,7 @@ body {
   position: absolute;
   background: var(--accent-cyan);
   color: #0F172A;
-  font-family: var(--font-heading);
+  font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 0.72rem;
   padding: 0.12rem 0.4rem;
@@ -638,12 +634,13 @@ body {
   gap: 1.25rem;
 }
 
+/* Reverted Front Screen Headline back to Original Bold Sans-Serif Single Line */
 .hero-title {
-  font-family: var(--font-calligraphic);
-  font-size: clamp(3.2rem, 7vw, 5.2rem);
-  font-weight: 700;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: clamp(2.2rem, 5.2vw, 3.8rem);
+  font-weight: 800;
   color: #FFFFFF;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.04em;
   line-height: 1.1;
   margin: 0.2rem 0;
   white-space: nowrap;
@@ -668,7 +665,7 @@ body {
 .hero-btn-primary {
   background: #FFFFFF;
   color: #000000;
-  font-family: var(--font-heading);
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 1rem;
   padding: 0.9rem 1.9rem;
@@ -688,7 +685,7 @@ body {
   background: rgba(22, 26, 38, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.85);
-  font-family: var(--font-heading);
+  font-family: 'Inter', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   padding: 0.9rem 1.9rem;
