@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,9 +17,6 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,12 +26,21 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+        continue-on-error: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+        continue-on-error: true
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy via GitHub Actions
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Deploy to gh-pages branch (Fallback)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
